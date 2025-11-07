@@ -5,13 +5,13 @@ import (
 )
 
 type GateWay struct {
-	Log            *Log            `json:"Log"`
-	OuterIp        string          `json:"OuterIp"`
-	OuterPort      int             `json:"OuterPort"`
-	OuterAddr      string          `json:"OuterAddr"`
-	MaxPlayerNum   int64           `json:"MaxPlayerNum"`
-	BlackCmd       map[string]bool `json:"BlackCmd"`
-	IsLogMsgPlayer bool            `json:"IsLogMsgPlayer"`
+	Log            *Log     `json:"Log"`
+	OuterIp        string   `json:"OuterIp"`
+	OuterPort      int      `json:"OuterPort"`
+	OuterAddr      string   `json:"OuterAddr"`
+	MaxPlayerNum   int64    `json:"MaxPlayerNum"`
+	BlackCmd       []string `json:"BlackCmd"`
+	IsLogMsgPlayer bool     `json:"IsLogMsgPlayer"`
 }
 
 var defaultGateWay = &GateWay{
@@ -20,11 +20,17 @@ var defaultGateWay = &GateWay{
 		LogFile: false,
 		AppName: "Gate",
 	},
-	OuterIp:        "127.0.0.1",
-	OuterPort:      11000,
-	OuterAddr:      "0.0.0.0:11000",
-	MaxPlayerNum:   0,
-	BlackCmd:       make(map[string]bool),
+	OuterIp:      "127.0.0.1",
+	OuterPort:    11000,
+	OuterAddr:    "0.0.0.0:11000",
+	MaxPlayerNum: 0,
+	BlackCmd: []string{
+		"PlayerPingReq",
+		"PlayerPingRsp",
+		"PlayerSceneRecordReq",
+		"PlayerSceneRecordRsp",
+		"PlayerSceneSyncDataNotice",
+	},
 	IsLogMsgPlayer: false,
 }
 
@@ -52,7 +58,7 @@ func (x *GateWay) GetMaxPlayerNum() int64 {
 	return x.MaxPlayerNum
 }
 
-func (x *GateWay) GetBlackCmd() map[string]bool {
+func (x *GateWay) GetBlackCmd() []string {
 	return x.BlackCmd
 }
 

@@ -10,5 +10,7 @@
   "DefaultPlayerSign": "",
   "DefaultPlayerHead": 41101,
   "DefaultInstanceIndex": 0,
-  "DefaultPhoneBackground": 8000
+  "DefaultPhoneBackground": 8000,
+  "DefaultSceneId": 9999,
+  "DefaultChannelId": 1314
 }

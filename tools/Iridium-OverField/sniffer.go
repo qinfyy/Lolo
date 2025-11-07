@@ -381,9 +381,9 @@ func buildPacketToSend(head *PacketHead, data []byte, fromServer bool, timestamp
 		log.Println("Json marshal error", err)
 		return
 	}
-	logPacket(packet, head)
+	// logPacket(packet, head)
 
-	log.Printf("name:%s b64:%s\n", GetProtoNameById(packetId), base64.StdEncoding.EncodeToString(data))
+	log.Printf("name:%s time:%s b64:%s\n", GetProtoNameById(packetId), timestamp.String(), base64.StdEncoding.EncodeToString(data))
 
 	sendStreamMsg(string(jsonResult))
 }

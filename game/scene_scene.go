@@ -30,10 +30,11 @@ type SceneInfo struct {
 
 type ScenePlayer struct {
 	*model.Player
-	Pos       *proto.Vector3
-	Rot       *proto.Vector3
-	SceneId   uint32
-	ChannelId uint32
+	Pos         *proto.Vector3
+	Rot         *proto.Vector3
+	SceneId     uint32
+	ChannelId   uint32
+	channelInfo *ChannelInfo // 绑定的房间
 }
 
 func (g *Game) getWordInfo() *WordInfo {
@@ -158,12 +159,6 @@ func (g *Game) joinSceneChannel(s *model.Player) {
 		log.Game.Errorf("场景:%v,房间:%v不存在！", scenePlayer.SceneId, scenePlayer.ChannelId)
 		return
 	}
-	// 进入房间
-	if ok := channelInfo.addPlayer(scenePlayer); !ok {
-		log.Game.Errorf("场景:%v,房间:%v加入失败！", scenePlayer.SceneId, scenePlayer.ChannelId)
-		return
-	}
-	// 发送场景通知包
-	g.SceneDataNotice(s, channelInfo)
-	g.ServerSceneSyncDataNotice(channelInfo, scenePlayer)
+	scenePlayer.channelInfo = channelInfo
+	channelInfo.addScenePlayerChan <- scenePlayer
 }

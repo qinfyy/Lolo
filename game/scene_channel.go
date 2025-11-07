@@ -1,11 +1,15 @@
 package game
 
 import (
+	"time"
+
+	"github.com/bytedance/sonic"
 	pb "google.golang.org/protobuf/proto"
 
 	"gucooing/lolo/game/model"
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
+	"gucooing/lolo/protocol/cmd"
 	"gucooing/lolo/protocol/proto"
 )
 
@@ -15,15 +19,26 @@ type ChannelInfo struct {
 	allPlayer   map[uint32]*ScenePlayer // 当前房间的全部玩家
 	weatherType proto.WeatherType       // 天气
 	todTime     uint32                  // 时间
+	doneChan    chan struct{}           // done
+
+	addScenePlayerChan   chan *ScenePlayer         // 玩家进入通道
+	addSceneSyncDataChan chan *proto.SceneSyncData // 同步器添加通道
+	sceneSyncDatas       []*proto.SceneSyncData    // 同步器
 }
 
 func (s *SceneInfo) newChannelInfo(channelId uint32) *ChannelInfo {
 	info := &ChannelInfo{
-		SceneId:     s.SceneId,
-		ChannelId:   channelId,
-		allPlayer:   make(map[uint32]*ScenePlayer),
-		weatherType: proto.WeatherType_WeatherType_RAINY,
+		SceneId:              s.SceneId,
+		ChannelId:            channelId,
+		allPlayer:            make(map[uint32]*ScenePlayer),
+		weatherType:          proto.WeatherType_WeatherType_RAINY,
+		doneChan:             make(chan struct{}),
+		addScenePlayerChan:   make(chan *ScenePlayer, 100),
+		addSceneSyncDataChan: make(chan *proto.SceneSyncData, 100),
+		sceneSyncDatas:       make([]*proto.SceneSyncData, 0),
 	}
+
+	go info.channelMainLoop()
 
 	return info
 }
@@ -35,18 +50,100 @@ func (c *ChannelInfo) getAllPlayer() map[uint32]*ScenePlayer {
 	return c.allPlayer
 }
 
+func (c *ChannelInfo) sendAllPlayer(cmdId uint32, packetId uint32, payloadMsg pb.Message) {
+	for _, player := range c.getAllPlayer() {
+		player.Conn.Send(cmdId, packetId, payloadMsg)
+	}
+}
+
+func (c *ChannelInfo) sendPlayer(player *ScenePlayer, cmdId uint32, packetId uint32, payloadMsg pb.Message) {
+	player.Conn.Send(cmdId, packetId, payloadMsg)
+}
+
+// 房间主线程
+func (c *ChannelInfo) channelMainLoop() {
+	syncTimer := time.NewTimer(200 * time.Millisecond) // 0.2s 同步一次
+	defer func() {
+		syncTimer.Stop()
+		log.Game.Debugf("场景:%v房间:%v退出", c.SceneId, c.ChannelId)
+	}()
+	for {
+		select {
+		case <-syncTimer.C: // 定时同步
+			c.playerSceneSync()
+			syncTimer.Reset(200 * time.Millisecond)
+		case scenePlayer := <-c.addScenePlayerChan: // 玩家进入
+			c.addPlayer(scenePlayer)
+		case syncData := <-c.addSceneSyncDataChan: // 添加同步内容
+			alg.AddList(&c.sceneSyncDatas, syncData)
+		case <-c.doneChan:
+			return
+		}
+	}
+}
+
 func (c *ChannelInfo) addPlayer(scenePlayer *ScenePlayer) bool {
 	list := c.getAllPlayer()
 	if _, ok := list[scenePlayer.UserId]; ok {
 		return false
 	}
+	scenePlayer.channelInfo = c
 	list[scenePlayer.UserId] = scenePlayer
+	// 通知包
+	c.SceneDataNotice(scenePlayer)
+	c.ServerSceneSyncDataNotice(scenePlayer, proto.SceneActionType_SceneActionType_ENTER)
 	return true
 }
 
-func (c *ChannelInfo) sendAllPlayer(cmdId uint32, packetId uint32, payloadMsg pb.Message) {
-	for _, player := range c.getAllPlayer() {
-		player.Conn.Send(cmdId, packetId, payloadMsg)
+// 通知客户端场景信息
+func (c *ChannelInfo) SceneDataNotice(scenePlayer *ScenePlayer) {
+	notice := &proto.SceneDataNotice{
+		Status: proto.StatusCode_StatusCode_OK,
+		Data:   nil,
+	}
+	defer c.sendPlayer(scenePlayer, cmd.SceneDataNotice, 0, notice)
+	data := c.GetPbSceneData()
+	if data == nil {
+		str, _ := sonic.MarshalString(c)
+		log.Game.Errorf("玩家场景信息异常:%s", str)
+		notice.Status = proto.StatusCode_StatusCode_CANT_JOIN_PLAYER_CURRENT_SCENE_CHANNEL
+		return
+	}
+	notice.Data = data
+}
+
+// 通知全部客户端执行Action
+func (c *ChannelInfo) ServerSceneSyncDataNotice(scenePlayer *ScenePlayer, actionType proto.SceneActionType) {
+	notice := &proto.ServerSceneSyncDataNotice{
+		Status: proto.StatusCode_StatusCode_OK,
+		Data:   make([]*proto.ServerSceneSyncData, 0),
+	}
+	defer c.sendAllPlayer(cmd.ServerSceneSyncDataNotice, 0, notice)
+	syncData := &proto.ServerSceneSyncData{
+		PlayerId:   scenePlayer.UserId,
+		ServerData: nil,
+	}
+	alg.AddList(&notice.Data, syncData)
+	switch actionType {
+	case proto.SceneActionType_SceneActionType_ENTER: //  进入场景
+		syncData.ServerData = []*proto.SceneServerData{
+			{
+				ActionType: proto.SceneActionType_SceneActionType_ENTER,
+				Player:     c.GetPbScenePlayer(scenePlayer),
+				TodTime:    0,
+			},
+		}
+	}
+}
+
+func (c *ChannelInfo) playerSceneSync() {
+	notice := &proto.PlayerSceneSyncDataNotice{
+		Status: proto.StatusCode_StatusCode_OK,
+		Data:   c.sceneSyncDatas,
+	}
+	c.sceneSyncDatas = make([]*proto.SceneSyncData, 0)
+	if len(notice.Data) > 0 {
+		c.sendAllPlayer(cmd.PlayerSceneSyncDataNotice, 0, notice)
 	}
 }
 

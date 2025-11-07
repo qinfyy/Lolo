@@ -27,6 +27,7 @@ func NewLogServer(router *gin.Engine) *LogServer {
 	if err != nil {
 		panic(err)
 	}
+	l.net.SetLogMsg(true)
 
 	return l
 }
@@ -38,7 +39,6 @@ func (g *LogServer) RunLogServer() error {
 			return err
 		}
 		conn.SetServerTag("LogServer")
-		conn.SetLogMsg(true)
 		log.Game.Debugf("LogServer 接受了新的连接请求:%s", conn.RemoteAddr())
 		go g.NewSession(conn)
 	}

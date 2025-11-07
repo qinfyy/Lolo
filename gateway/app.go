@@ -37,6 +37,15 @@ func NewGateway(router *gin.Engine) *Gateway {
 	if err != nil {
 		panic(err)
 	}
+	g.net.SetBlackPackId(func() map[uint32]struct{} {
+		list := make(map[uint32]struct{})
+		for _, packString := range g.cfg.GetBlackCmd() {
+			id := cmd.Get().GetCmdIdByCmdName(packString)
+			list[id] = struct{}{}
+		}
+		return list
+	}())
+	g.net.SetLogMsg(g.cfg.GetIsLogMsgPlayer())
 
 	go g.loginSessionManagement()
 	return g
@@ -49,7 +58,6 @@ func (g *Gateway) RunGateway() error {
 			return err
 		}
 		conn.SetServerTag("GateWay")
-		conn.SetLogMsg(g.cfg.GetIsLogMsgPlayer())
 		log.Gate.Infof("Gateway 接受了新的连接请求:%s", conn.RemoteAddr())
 		go g.NewSession(conn)
 	}

@@ -17,11 +17,16 @@ import (
 )
 
 type tcpNet struct {
+	*netBase
 	listener net.Listener
 }
 
 func newTcpNet(addr string) (*tcpNet, error) {
-	x := new(tcpNet)
+	x := &tcpNet{
+		netBase: &netBase{
+			blackPackId: make(map[uint32]struct{}),
+		},
+	}
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -39,6 +44,7 @@ func (x *tcpNet) Accept() (Conn, error) {
 		return nil, err
 	}
 	tconn := &tcpConn{
+		net:  x,
 		conn: conn,
 		buf:  bufio.NewReaderSize(conn, alg.PacketMaxLen),
 	}
@@ -54,9 +60,9 @@ func (x *tcpNet) Close() error {
 }
 
 type tcpConn struct {
+	net       *tcpNet
 	conn      net.Conn
 	buf       *bufio.Reader
-	logMsg    bool
 	uid       uint32
 	seqId     uint32
 	serverTag string
@@ -105,7 +111,12 @@ func (x *tcpConn) Read() (*alg.GameMsg, error) {
 			log.Gate.Errorf("unmarshal proto data err: %v\n", err)
 			return nil, err
 		}
-		logMag(ClientMsg, x.serverTag, x.logMsg, x.uid, head.MsgId, protoObj)
+		logMag(ClientMsg,
+			x.serverTag,
+			x.net.logPack(head.MsgId),
+			x.uid,
+			head.MsgId,
+			protoObj)
 		gameMsg := &alg.GameMsg{
 			PacketHead: head,
 			Body:       protoObj,
@@ -126,7 +137,7 @@ func (x *tcpConn) Send(cmdId, packetId uint32, protoObj pb.Message) {
 		return
 	}
 
-	logMag(ServerMsg, x.serverTag, x.logMsg, x.uid, cmdId, protoObj)
+	logMag(ServerMsg, x.serverTag, x.net.logPack(cmdId), x.uid, cmdId, protoObj)
 
 	head := &proto.PacketHead{
 		MsgId:    cmdId,
@@ -170,10 +181,6 @@ func (x *tcpConn) SetUID(uid uint32) {
 
 func (x *tcpConn) SetServerTag(serverTag string) {
 	x.serverTag = serverTag
-}
-
-func (x *tcpConn) SetLogMsg(logMsg bool) {
-	x.logMsg = logMsg
 }
 
 func (x *tcpConn) Close() {
