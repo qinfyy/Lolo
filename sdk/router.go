@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"gucooing/lolo/config"
+	"gucooing/lolo/gdconf"
 )
 
 func (s *Server) Router() {
@@ -19,6 +20,14 @@ func (s *Server) Router() {
 
 func HandleDefault(c *gin.Context) {
 	c.String(200, "BanGK!")
+}
+
+type RegionInfoRequest struct {
+	Version         string `form:"version" binding:"required"`
+	Version2        string `form:"version2" binding:"required"`
+	AccountType     string `form:"accountType" binding:"required"`
+	OS              string `form:"os" binding:"required"`
+	LastLoginSDKUID string `form:"lastloginsdkuid" binding:"required"`
 }
 
 type RegionInfo struct {
@@ -35,6 +44,14 @@ type RegionInfo struct {
 }
 
 func regionInfo(c *gin.Context) {
+	var req RegionInfoRequest
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request parameters",
+		})
+		return
+	}
+
 	conf := config.GetGateWay()
 	info := &RegionInfo{
 		Status:           true,
@@ -45,7 +62,7 @@ func regionInfo(c *gin.Context) {
 		Text:             "",
 		ClientLogTcpIp:   config.GetLogServer().GetOuterIp(),
 		ClientLogTcpPort: config.GetLogServer().GetOuterPort(),
-		CurrentVersion:   "2025-09-19-17-04-53_2025-11-04-14-13-58",
+		CurrentVersion:   gdconf.GetClientVersion(req.Version),
 		PhotoShareCdnUrl: "https://cdn-photo-of.inutan.com/cn_prod_main",
 	}
 

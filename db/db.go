@@ -40,6 +40,12 @@ func NewDB() error {
 		&BlackDevice{},
 		&OFUser{},
 	)
+
+	db.Create(&OFUser{
+		UserId: 999999,
+		SdkUid: 0,
+	})
+
 	return err
 }
 

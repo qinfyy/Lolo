@@ -20,9 +20,11 @@ type GameConfig struct {
 	excelPath  string
 	configPath string
 
-	Excel    *Excel
-	Config   *Config
-	Constant *Constant
+	Excel  *Excel
+	Config *Config
+
+	Constant      *Constant
+	ClientVersion *ClientVersion
 }
 
 func LoadGameConfig() *GameConfig {
@@ -68,6 +70,7 @@ func (g *GameConfig) load() {
 
 	// data
 	g.loadConstant()
+	g.loadClientVersion()
 
 	// 初始化excel
 	g.loadHead()

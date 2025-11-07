@@ -13,17 +13,17 @@ import (
 	"gucooing/lolo/sdk"
 )
 
+var (
+	ios = "version=2025-09-19-17-04-53&version2=4d20f430803c545d5a54de11709da8a8&accountType=8888&os=2&lastloginsdkuid=114514"
+	az  = "version=2025-09-19-17-06-44&version2=c3c8e922d2119b54a8499bd12101440a&accountType=28814&os=1&lastloginsdkuid=114514"
+)
+
 func newProxy(r *gin.Engine) {
 	r.Any("/dispatch/region_info", func(c *gin.Context) {
 		resp, err := http.DefaultClient.Post(
 			"http://dsp-prod-of.inutan.com:18881/dispatch/region_info",
 			"application/x-www-form-urlencoded",
-			strings.NewReader(
-				"version=2025-09-19-17-04-53"+
-					"&version2=4d20f430803c545d5a54de11709da8a8"+
-					"&accountType=8888"+
-					"&os=2"+
-					"&lastloginsdkuid=114514"))
+			strings.NewReader(ios))
 		if err != nil {
 			return
 		}

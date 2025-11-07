@@ -7,8 +7,8 @@ import (
 )
 
 type OFUser struct {
-	UserId    uint32 `gorm:"primarykey;AUTO_INCREMENT;default:1000000"`
-	SdkUid    uint32
+	UserId    uint32 `gorm:"primarykey;autoIncrement"`
+	SdkUid    uint32 `gorm:"unique"`
 	Token     string
 	DeviceId  string // 设备码
 	ChannelId string
@@ -45,7 +45,8 @@ func GetOFUserBySdkUid(sdkUid uint32) (*OFUser, error) {
 			return nil, err
 		}
 	}
-	return user, tx.Commit().Error
+	tx.Commit()
+	return user, tx.Error
 }
 
 func SaveOFUser(sdkUid uint32, fx func(user *OFUser) bool) error {

@@ -15,11 +15,12 @@ type Constant struct {
 	DefaultPhoneBackground uint32   `json:"DefaultPhoneBackground"`
 	DefaultSceneId         uint32   `json:"DefaultSceneId"`
 	DefaultChannelId       uint32   `json:"DefaultChannelId"`
+	ChannelTick            int      `json:"ChannelTick"`
 }
 
 func (g *GameConfig) loadConstant() {
 	g.Constant = new(Constant)
-	ReadJson(g.dataPath, "constant.json", &g.Constant)
+	ReadJson(g.dataPath, "Constant.json", &g.Constant)
 }
 
 func GetConstant() *Constant {

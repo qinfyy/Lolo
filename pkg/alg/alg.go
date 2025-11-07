@@ -18,3 +18,10 @@ func AddList[T any](list *[]*T, n *T) {
 	}
 	*list = append(*list, n)
 }
+
+func MaxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}

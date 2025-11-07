@@ -57,6 +57,12 @@ func (g *Game) PlayerLogin(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 		rsp.Status = proto.StatusCode_StatusCode_PLAYER_NOT_FOUND
 		return
 	}
+	defer func() {
+		g.send(s, cmd.PlayerLoginRsp, msg.PacketId, rsp)
+		if req.IsReconnect {
+			g.loginGame(s)
+		}
+	}()
 	// pack
 	{
 		rsp.ClientSeqId = msg.SeqId
@@ -88,7 +94,6 @@ func (g *Game) PlayerLogin(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 		rsp.ServerTimeZone = 28800
 		rsp.ClientLogServerToken = "114514"
 	}
-	defer g.send(s, cmd.PlayerLoginRsp, msg.PacketId, rsp)
 	log.Game.Infof("UserId:%v Name:%s IP:%s 设备:%s 系统:%s 登录成功!",
 		s.UserId, rsp.PlayerName, req.Ip, req.DeviceModel, req.OsVer)
 }
@@ -99,14 +104,7 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 	}
 	defer func() {
 		g.send(s, cmd.PlayerMainDataRsp, msg.PacketId, rsp)
-		g.PackNotice(s)
-		// 进入房间
-		g.joinSceneChannel(s)
-		/*
-			s.ChangeChatChannel()
-
-		*/
-		g.ChatMsgRecordInitNotice(s)
+		g.loginGame(s)
 	}()
 	// 基础信息
 	basic := s.GetBasicModel()
@@ -157,6 +155,17 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 		rsp.QuestionnaireInfo = s.GetPlayerQuestionnaireInfo()
 		rsp.UnlockFunctions = make([]uint32, 0)
 	}
+}
+
+func (g *Game) loginGame(s *model.Player) {
+	g.PackNotice(s)
+	// 进入房间
+	g.joinSceneChannel(s)
+	/*
+		s.ChangeChatChannel()
+
+	*/
+	g.ChatMsgRecordInitNotice(s)
 }
 
 func (g *Game) PlayerPing(s *model.Player, msg *alg.GameMsg) {

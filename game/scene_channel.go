@@ -7,6 +7,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 
 	"gucooing/lolo/game/model"
+	"gucooing/lolo/gdconf"
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/protocol/cmd"
@@ -19,6 +20,7 @@ type ChannelInfo struct {
 	allPlayer   map[uint32]*ScenePlayer // 当前房间的全部玩家
 	weatherType proto.WeatherType       // 天气
 	todTime     uint32                  // 时间
+	tick        time.Duration           // 时间刻 ms
 	doneChan    chan struct{}           // done
 
 	addScenePlayerChan   chan *ScenePlayer         // 玩家进入通道
@@ -32,6 +34,7 @@ func (s *SceneInfo) newChannelInfo(channelId uint32) *ChannelInfo {
 		ChannelId:            channelId,
 		allPlayer:            make(map[uint32]*ScenePlayer),
 		weatherType:          proto.WeatherType_WeatherType_RAINY,
+		tick:                 time.Duration(alg.MaxInt(50, gdconf.GetConstant().ChannelTick)) * time.Millisecond,
 		doneChan:             make(chan struct{}),
 		addScenePlayerChan:   make(chan *ScenePlayer, 100),
 		addSceneSyncDataChan: make(chan *proto.SceneSyncData, 100),
@@ -62,7 +65,7 @@ func (c *ChannelInfo) sendPlayer(player *ScenePlayer, cmdId uint32, packetId uin
 
 // 房间主线程
 func (c *ChannelInfo) channelMainLoop() {
-	syncTimer := time.NewTimer(200 * time.Millisecond) // 0.2s 同步一次
+	syncTimer := time.NewTimer(c.tick) // 0.2s 同步一次
 	defer func() {
 		syncTimer.Stop()
 		log.Game.Debugf("场景:%v房间:%v退出", c.SceneId, c.ChannelId)
@@ -71,7 +74,7 @@ func (c *ChannelInfo) channelMainLoop() {
 		select {
 		case <-syncTimer.C: // 定时同步
 			c.playerSceneSync()
-			syncTimer.Reset(200 * time.Millisecond)
+			syncTimer.Reset(c.tick)
 		case scenePlayer := <-c.addScenePlayerChan: // 玩家进入
 			c.addPlayer(scenePlayer)
 		case syncData := <-c.addSceneSyncDataChan: // 添加同步内容
@@ -85,6 +88,7 @@ func (c *ChannelInfo) channelMainLoop() {
 func (c *ChannelInfo) addPlayer(scenePlayer *ScenePlayer) bool {
 	list := c.getAllPlayer()
 	if _, ok := list[scenePlayer.UserId]; ok {
+		c.SceneDataNotice(scenePlayer) // 已在场景中，说明是重连，直接发场景通知就行了
 		return false
 	}
 	scenePlayer.channelInfo = c
