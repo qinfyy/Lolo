@@ -15,12 +15,8 @@ func (g *Game) PackNotice(s *model.Player) {
 		IsClearTempPack: false,
 	}
 	defer g.send(s, cmd.PackNotice, 0, notice)
-	// 徽章
-	for _, v := range s.GetItemModel().GetItemBadgeMap() {
-		notice.Items = append(notice.Items, v.GetPbItemDetail())
-	}
-	// 伞
-	for _, v := range s.GetItemModel().GetItemUmbrellaMap() {
+	// 徽章 伞
+	for _, v := range s.GetItemModel().GetItemBaseMap() {
 		notice.Items = append(notice.Items, v.GetPbItemDetail())
 	}
 	// 服装
@@ -31,17 +27,60 @@ func (g *Game) PackNotice(s *model.Player) {
 	for _, v := range s.GetItemModel().GetItemWeaponMap() {
 		notice.Items = append(notice.Items, v.GetPbItemDetail())
 	}
+	// 盔甲
+	for _, v := range s.GetItemModel().GetItemArmorMap() {
+		notice.Items = append(notice.Items, v.GetPbItemDetail())
+	}
+	// 海报
+	for _, v := range s.GetItemModel().GetItemPosterMap() {
+		notice.Items = append(notice.Items, v.GetPbItemDetail())
+	}
 }
 
 func (g *Game) GetWeapon(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.GetWeaponReq)
 	rsp := &proto.GetWeaponRsp{
 		Status:   proto.StatusCode_StatusCode_OK,
 		Weapons:  make([]*proto.WeaponInstance, 0),
 		TotalNum: uint32(len(s.GetItemModel().GetItemWeaponMap())),
-		EndIndex: s.GetItemModel().InstanceIndex,
+		EndIndex: 0,
 	}
 	defer g.send(s, cmd.GetWeaponRsp, msg.PacketId, rsp)
 	for _, v := range s.GetItemModel().GetItemWeaponMap() {
-		rsp.Weapons = append(rsp.Weapons, v.GetPbWeaponInstance())
+		if req.WeaponSystemType == proto.EWeaponSystemType_EWeaponSystemType_None ||
+			req.WeaponSystemType == v.WeaponSystemType {
+			rsp.Weapons = append(rsp.Weapons, v.GetPbWeaponInstance())
+		}
+	}
+}
+
+func (g *Game) GetArmor(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.GetArmorReq)
+	rsp := &proto.GetArmorRsp{
+		Status:   proto.StatusCode_StatusCode_OK,
+		Armors:   make([]*proto.ArmorInstance, 0),
+		TotalNum: 0,
+		EndIndex: 0,
+	}
+	defer g.send(s, cmd.GetArmorRsp, msg.PacketId, rsp)
+	for _, v := range s.GetItemModel().GetItemArmorMap() {
+		if req.WeaponSystemType == proto.EWeaponSystemType_EWeaponSystemType_None ||
+			req.WeaponSystemType == v.WeaponSystemType {
+			rsp.Armors = append(rsp.Armors, v.GetPbArmorInstance())
+		}
+	}
+}
+
+func (g *Game) GetPoster(s *model.Player, msg *alg.GameMsg) {
+	// req := msg.Body.(*proto.GetPosterReq)
+	rsp := &proto.GetPosterRsp{
+		Status:   proto.StatusCode_StatusCode_OK,
+		Posters:  make([]*proto.PosterInstance, 0),
+		TotalNum: 0,
+		EndIndex: 0,
+	}
+	defer g.send(s, cmd.GetPosterRsp, msg.PacketId, rsp)
+	for _, v := range s.GetItemModel().GetItemPosterMap() {
+		rsp.Posters = append(rsp.Posters, v.GetPbPosterInstance())
 	}
 }

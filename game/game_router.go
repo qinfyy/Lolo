@@ -22,10 +22,15 @@ func (g *Game) newRouter() {
 		cmd.SendActionReq:        g.SendAction,        // 场景自动化同步器
 		// 队伍
 		cmd.UpdateTeamReq: g.UpdateTeam, // 更新队伍
-		// 武器
-		cmd.GetWeaponReq: g.GetWeapon, // 获取玩家全部武器
+		// 物品
+		cmd.GetWeaponReq: g.GetWeapon, // 获取武器列表-根据type
+		cmd.GetArmorReq:  g.GetArmor,  // 获取盔甲列表-根据type
+		cmd.GetPosterReq: g.GetPoster, // 获取海报列表
 		// 卡池
 		cmd.GachaListReq: g.GachaList, // 获取卡池信息
+		// 角色
+		cmd.GetCharacterAchievementListReq: g.GetCharacterAchievementList, // 获取角色成就情况
+		cmd.OutfitPresetUpdateReq:          g.OutfitPresetUpdate,          // 保存预设装扮
 
 		cmd.GenericSceneBReq:          g.GenericSceneB,
 		cmd.AbilityBadgeListReq:       g.AbilityBadgeList,

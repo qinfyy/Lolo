@@ -7,11 +7,12 @@ import (
 )
 
 type ItemModel struct {
-	InstanceIndex   uint32                       // 物品索引生成器
-	ItemBadgeMap    map[uint32]*ItemBadgeInfo    // 徽章
-	ItemUmbrellaMap map[uint32]*ItemUmbrellaInfo // 伞
-	ItemFashionMap  map[uint32]*ItemFashionInfo  // 服装
-	ItemWeaponMap   map[uint32]*ItemWeaponInfo   // 武器
+	InstanceIndex  uint32                      // 物品索引生成器
+	ItemBaseInfo   map[uint32]*ItemBaseInfo    // 基础物品 徽章 伞
+	ItemWeaponMap  map[uint32]*ItemWeaponInfo  // 武器
+	ItemFashionMap map[uint32]*ItemFashionInfo // 服装
+	ItemArmorMap   map[uint32]*ItemArmorInfo   // 盔甲
+	ItemPosterMap  map[uint32]*ItemPosterInfo  // 海报
 }
 
 func DefaultItemModel() *ItemModel {
@@ -40,96 +41,46 @@ type EBagItemTag interface {
 	GetPbItemDetail() *proto.ItemDetail
 }
 
-type ItemBadgeInfo struct {
-	ItemId uint32
-	Num    int64
+type ItemBaseInfo struct {
+	ItemId   uint32
+	Num      int64
+	ItemType proto.EBagItemTag
 }
 
-func (i *ItemModel) GetItemBadgeMap() map[uint32]*ItemBadgeInfo {
+func (i *ItemModel) GetItemBaseMap() map[uint32]*ItemBaseInfo {
 	if i == nil {
 		return nil
 	}
-	if i.ItemBadgeMap == nil {
-		i.ItemBadgeMap = make(map[uint32]*ItemBadgeInfo)
+	if i.ItemBaseInfo == nil {
+		i.ItemBaseInfo = make(map[uint32]*ItemBaseInfo)
 	}
-	return i.ItemBadgeMap
+	return i.ItemBaseInfo
 }
 
-func (i *ItemModel) AddItemBadge(itemId uint32, num int64) {
+func (i *ItemModel) AddItemBase(itemId uint32, num int64) {
 	conf := gdconf.GetItemConfigure(itemId)
-	list := i.GetItemBadgeMap()
-	if conf == nil || list == nil ||
-		conf.NewBagItemTag != int32(proto.EBagItemTag_EBagItemTag_Badge) {
-		log.Game.Warnf("添加Badge失败,数据异常或不存在ID:%v", itemId)
+	list := i.GetItemBaseMap()
+	if conf == nil || list == nil {
+		log.Game.Warnf("添加基础物品失败,数据异常或不存在ID:%v", itemId)
 		return
 	}
 	info := list[itemId]
 	if info == nil {
-		info = &ItemBadgeInfo{
-			ItemId: itemId,
-			Num:    0,
+		info = &ItemBaseInfo{
+			ItemId:   itemId,
+			Num:      0,
+			ItemType: proto.EBagItemTag_EBagItemTag_Badge,
 		}
 		list[itemId] = info
 	}
 	info.Num += num
 }
 
-func (x *ItemBadgeInfo) GetPbItemDetail() *proto.ItemDetail {
-	info := &proto.ItemDetail{
-		MainItem: &proto.ItemInfo{
-			ItemId:  x.ItemId,
-			ItemTag: proto.EBagItemTag_EBagItemTag_Badge,
-			Item: &proto.ItemInfo_BaseItem{
-				BaseItem: &proto.BaseItem{
-					ItemId: x.ItemId,
-					Num:    x.Num,
-				},
-			},
-		},
-		PackType: proto.ItemDetail_PackType_Inventory,
-	}
-	return info
-}
-
-type ItemUmbrellaInfo struct {
-	ItemId uint32
-	Num    int64
-}
-
-func (i *ItemModel) GetItemUmbrellaMap() map[uint32]*ItemUmbrellaInfo {
-	if i == nil {
-		return nil
-	}
-	if i.ItemUmbrellaMap == nil {
-		i.ItemUmbrellaMap = make(map[uint32]*ItemUmbrellaInfo)
-	}
-	return i.ItemUmbrellaMap
-}
-
-func (i *ItemModel) AddItemUmbrella(itemId uint32, num int64) {
-	conf := gdconf.GetItemConfigure(itemId)
-	list := i.GetItemUmbrellaMap()
-	if conf == nil || list == nil ||
-		conf.NewBagItemTag != int32(proto.EBagItemTag_EBagItemTag_Umbrella) {
-		log.Game.Warnf("添加Umbrella失败,数据异常或不存在ID:%v", itemId)
-		return
-	}
-	info := list[itemId]
-	if info == nil {
-		info = &ItemUmbrellaInfo{
-			ItemId: itemId,
-			Num:    0,
-		}
-		list[itemId] = info
-	}
-	info.Num += num
-}
-
-func (i *ItemUmbrellaInfo) GetPbItemDetail() *proto.ItemDetail {
+func (i *ItemBaseInfo) GetPbItemDetail() *proto.ItemDetail {
 	info := &proto.ItemDetail{
 		MainItem: &proto.ItemInfo{
 			ItemId:  i.ItemId,
-			ItemTag: proto.EBagItemTag_EBagItemTag_Umbrella,
+			ItemTag: i.ItemType,
 			Item: &proto.ItemInfo_BaseItem{
 				BaseItem: &proto.BaseItem{
 					ItemId: i.ItemId,
@@ -143,21 +94,22 @@ func (i *ItemUmbrellaInfo) GetPbItemDetail() *proto.ItemDetail {
 }
 
 type ItemWeaponInfo struct {
-	WeaponId       uint32            // 武器id
-	InstanceId     uint32            // 索引id
-	Attack         uint32            // 攻击力
-	DamageBalance  uint32            // 伤害平衡
-	CriticalRatio  uint32            // 临界比率
-	RandomProperty []*RandomProperty // 随机属性
-	WearerId       uint32            // 装备者id
-	Level          uint32            // 等级
-	StrengthLevel  uint32            // 强度等级
-	StrengthExp    uint32            // 强度经验
-	Star           uint32            // 星数
-	Inscription1   uint32            // 铭文1
-	Durability     uint32            // 耐用性
-	PropertyIndex  uint32            // ?指数
-	IsLock         bool              // 是否锁
+	WeaponId         uint32                  // 武器id
+	InstanceId       uint32                  // 索引id
+	WeaponSystemType proto.EWeaponSystemType // 装备类型
+	Attack           uint32                  // 攻击力
+	DamageBalance    uint32                  // 伤害平衡
+	CriticalRatio    uint32                  // 临界比率
+	RandomProperty   []*RandomProperty       // 随机属性
+	WearerId         uint32                  // 装备者id
+	Level            uint32                  // 等级
+	StrengthLevel    uint32                  // 强度等级
+	StrengthExp      uint32                  // 强度经验
+	Star             uint32                  // 星数
+	Inscription1     uint32                  // 铭文1
+	Durability       uint32                  // 耐用性
+	PropertyIndex    uint32                  // ?指数
+	IsLock           bool                    // 是否锁
 }
 
 type RandomProperty struct {
@@ -189,21 +141,22 @@ func (i *ItemModel) AddItemWeaponInfo(weaponId uint32) *ItemWeaponInfo {
 	}
 	instanceId := i.NextInstanceIndex()
 	info := &ItemWeaponInfo{
-		WeaponId:       uint32(conf.ItemID),
-		InstanceId:     instanceId,
-		Attack:         1,
-		DamageBalance:  1,
-		CriticalRatio:  1,
-		RandomProperty: make([]*RandomProperty, 0),
-		WearerId:       0,
-		Level:          1,
-		StrengthLevel:  0,
-		StrengthExp:    0,
-		Star:           1,
-		Inscription1:   0,
-		Durability:     0,
-		PropertyIndex:  1,
-		IsLock:         false,
+		WeaponId:         uint32(conf.ItemID),
+		InstanceId:       instanceId,
+		WeaponSystemType: proto.EWeaponSystemType(conf.NewWeaponSystemType),
+		Attack:           1,
+		DamageBalance:    1,
+		CriticalRatio:    1,
+		RandomProperty:   make([]*RandomProperty, 0),
+		WearerId:         0,
+		Level:            1,
+		StrengthLevel:    0,
+		StrengthExp:      0,
+		Star:             1,
+		Inscription1:     0,
+		Durability:       0,
+		PropertyIndex:    1,
+		IsLock:           false,
 	}
 	list[instanceId] = info
 
@@ -300,6 +253,105 @@ func (i *ItemFashionInfo) GetPbItemDetail() *proto.ItemDetail {
 			},
 		},
 		PackType: proto.ItemDetail_PackType_Inventory,
+	}
+	return info
+}
+
+type ItemArmorInfo struct {
+	WeaponSystemType proto.EWeaponSystemType //  装备类型
+}
+
+func (i *ItemModel) GetItemArmorMap() map[uint32]*ItemArmorInfo {
+	if i == nil {
+		return nil
+	}
+	if i.ItemArmorMap == nil {
+		i.ItemArmorMap = make(map[uint32]*ItemArmorInfo)
+	}
+	return i.ItemArmorMap
+}
+
+func (i *ItemModel) AddItemArmorInfo(itemId uint32) bool {
+	return false
+}
+
+func (i *ItemArmorInfo) GetPbItemDetail() *proto.ItemDetail {
+	info := &proto.ItemDetail{
+		MainItem: &proto.ItemInfo{
+			ItemId:  0,
+			ItemTag: proto.EBagItemTag_EBagItemTag_Armor,
+			Item: &proto.ItemInfo_Armor{
+				Armor: &proto.ArmorInstance{
+					ArmorId:          0,
+					InstanceId:       0,
+					MainPropertyType: 0,
+					MainPropertyVal:  0,
+					RandomProperty:   nil,
+					WearerId:         0,
+					Level:            0,
+					StrengthLevel:    0,
+					StrengthExp:      0,
+					PropertyIndex:    0,
+					IsLock:           false,
+				},
+			},
+		},
+		PackType: proto.ItemDetail_PackType_Inventory,
+	}
+	return info
+}
+
+func (i *ItemArmorInfo) GetPbArmorInstance() *proto.ArmorInstance {
+	info := &proto.ArmorInstance{
+		ArmorId:          0,
+		InstanceId:       0,
+		MainPropertyType: 0,
+		MainPropertyVal:  0,
+		RandomProperty:   make([]*proto.RandomProperty, 0),
+		WearerId:         0,
+		Level:            0,
+		StrengthLevel:    0,
+		StrengthExp:      0,
+		PropertyIndex:    0,
+		IsLock:           false,
+	}
+
+	return info
+}
+
+type ItemPosterInfo struct {
+}
+
+func (i *ItemModel) GetItemPosterMap() map[uint32]*ItemPosterInfo {
+	if i == nil {
+		return nil
+	}
+	if i.ItemPosterMap == nil {
+		i.ItemPosterMap = make(map[uint32]*ItemPosterInfo)
+	}
+	return i.ItemPosterMap
+}
+
+func (i *ItemPosterInfo) GetPbItemDetail() *proto.ItemDetail {
+	info := &proto.ItemDetail{
+		MainItem: &proto.ItemInfo{
+			ItemId:  0,
+			ItemTag: proto.EBagItemTag_EBagItemTag_Poster,
+			Item: &proto.ItemInfo_Poster{
+				Poster: i.GetPbPosterInstance(),
+			},
+		},
+		PackType: proto.ItemDetail_PackType_Inventory,
+	}
+	return info
+}
+
+func (i *ItemPosterInfo) GetPbPosterInstance() *proto.PosterInstance {
+	info := &proto.PosterInstance{
+		PosterId:   0,
+		InstanceId: 0,
+		WearerId:   0,
+		Star:       0,
 	}
 	return info
 }

@@ -15,13 +15,21 @@ func DefaultCharacterModel() *CharacterModel {
 	info := &CharacterModel{
 		CharacterMap: make(map[uint32]*CharacterInfo),
 	}
-	for _, characterId := range gdconf.GetConstant().DefaultCharacter {
-		characterInfo := NewCharacterInfo(characterId)
+	// for _, characterId := range gdconf.GetConstant().DefaultCharacter {
+	// 	characterInfo := NewCharacterInfo(characterId)
+	// 	if characterInfo == nil {
+	// 		log.Game.Errorf("初始化默认角色:%v失败", characterId)
+	// 		continue
+	// 	}
+	// 	info.CharacterMap[characterId] = characterInfo
+	// }
+	for _, conf := range gdconf.GetCharacterMap() {
+		characterInfo := NewCharacterInfo(uint32(conf.ID))
 		if characterInfo == nil {
-			log.Game.Errorf("初始化默认角色:%v失败", characterId)
+			log.Game.Errorf("初始化默认角色:%v失败", conf.ID)
 			continue
 		}
-		info.CharacterMap[characterId] = characterInfo
+		info.CharacterMap[uint32(conf.ID)] = characterInfo
 	}
 	return info
 }
@@ -157,8 +165,8 @@ func (s *Player) NewCharacterAppearance(characterId uint32) *CharacterAppearance
 		CollectionGlovesInstanceId: 0,
 		FishingRodInstanceId:       0,
 	}
-	s.GetItemModel().AddItemBadge(info.Badge, 1)
-	s.GetItemModel().AddItemUmbrella(info.UmbrellaId, 1)
+	s.GetItemModel().AddItemBase(info.Badge, 1)
+	s.GetItemModel().AddItemBase(info.UmbrellaId, 1)
 
 	return info
 }
