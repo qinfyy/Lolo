@@ -45,3 +45,11 @@ func (s *Player) GetPbPlayerDropRateInfo() *proto.PlayerDropRateInfo {
 	}
 	return info
 }
+
+func (s *Player) GetUnlockFunctions() []uint32 {
+	list := make([]uint32, 0)
+	for _, v := range gdconf.GetAllPlayerUnlock().GetPlayerUnlock().GetDatas() {
+		list = append(list, uint32(v.ID))
+	}
+	return list
+}

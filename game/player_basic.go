@@ -48,6 +48,8 @@ func (g *Game) PlayerLogin(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 		}
 	} else {
 		// newPlayer
+		s.GetCharacterModel().AllCharacterModel()
+		s.GetItemModel().AllItemModel()
 	}
 	g.userMap[userId] = s
 
@@ -153,12 +155,7 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 		rsp.PlayerDropRateInfo = s.GetPbPlayerDropRateInfo()
 		rsp.QuestDetail = s.GetQuestDetail()
 		rsp.QuestionnaireInfo = s.GetPlayerQuestionnaireInfo()
-		rsp.UnlockFunctions = []uint32{
-			100000003,
-			100000006,
-			100000009,
-			100000021,
-		}
+		rsp.UnlockFunctions = s.GetUnlockFunctions()
 	}
 }
 
@@ -281,4 +278,42 @@ func (g *Game) ChangeMusicalItem(s *model.Player, msg *alg.GameMsg) {
 		MusicalItemId:         0,
 	}
 	defer g.send(s, cmd.ChangeMusicalItemRsp, msg.PacketId, rsp)
+}
+
+func (g *Game) SelfIntervalInit(s *model.Player, msg *alg.GameMsg) {
+	// req := msg.Body.(*proto.SelfIntervalInitReq)
+	rsp := &proto.SelfIntervalInitRsp{
+		Status:     proto.StatusCode_StatusCode_OK,
+		IntervalId: 0,
+		EndTime:    0,
+		IsStart:    false,
+		Interval: &proto.IntervalInfo{
+			IntervalId: 0,
+			FinishTime: 0,
+			PlayerId:   s.UserId,
+			CreateTime: 0,
+			Member:     make([]*proto.FriendIntervalInfo, 0),
+		},
+	}
+	defer g.send(s, cmd.SelfIntervalInitRsp, msg.PacketId, rsp)
+}
+
+func (g *Game) BossRushInfo(s *model.Player, msg *alg.GameMsg) {
+	// req := msg.Body.(*proto.BossRushInfoReq)
+	rsp := &proto.BossRushInfoRsp{
+		Status: proto.StatusCode_StatusCode_OK,
+		Info: &proto.BossRushInfo{
+			SeasonId:          1002,
+			BestTotalScore:    0,
+			TotalRankRatio:    0,
+			CurrentStageIndex: 0,
+			StageInfos:        make([]*proto.BossRushStageInfo, 0),
+			StartTime:         1762600320,
+			EndTime:           1762620320,
+			ShowRankTime:      0,
+			ChallengeEndTime:  0,
+			UsedCharacters:    make([]uint32, 0),
+		},
+	}
+	defer g.send(s, cmd.BossRushInfoRsp, msg.PacketId, rsp)
 }

@@ -28,14 +28,18 @@ func (g *Game) newRouter() {
 		cmd.GetArmorReq:  g.GetArmor,  // 获取盔甲列表-根据type
 		cmd.GetPosterReq: g.GetPoster, // 获取海报列表
 		// 卡池
-		cmd.GachaListReq: g.GachaList, // 获取卡池信息
+		cmd.GachaListReq:   g.GachaList,   // 获取卡池信息
+		cmd.GachaRecordReq: g.GachaRecord, // 获取抽卡记录
 		// 角色
 		cmd.GetCharacterAchievementListReq: g.GetCharacterAchievementList, // 获取角色成就情况
 		cmd.OutfitPresetUpdateReq:          g.OutfitPresetUpdate,          // 保存预设装扮
 
+		cmd.BossRushInfoReq:           g.BossRushInfo,
+		cmd.FriendIntervalInitReq:     g.FriendIntervalInit,
+		cmd.SelfIntervalInitReq:       g.SelfIntervalInit,
+		cmd.ExploreInitReq:            g.ExploreInit,
 		cmd.NpcTalkReq:                g.NpcTalk,  // npc对话
 		cmd.TutorialReq:               g.Tutorial, // 开始教程
-		cmd.SetArchiveInfoReq:         g.SetArchiveInfo,
 		cmd.ChallengeFriendRankReq:    g.ChallengeFriendRank,
 		cmd.GenericSceneBReq:          g.GenericSceneB,
 		cmd.AbilityBadgeListReq:       g.AbilityBadgeList,
@@ -52,7 +56,8 @@ func (g *Game) newRouter() {
 		cmd.ManualListReq:             g.ManualList,
 		cmd.GetCollectMoonInfoReq:     g.GetCollectMoonInfo,
 		cmd.ChangeMusicalItemReq:      g.ChangeMusicalItem,
-		cmd.GetArchiveInfoReq:         g.GetArchiveInfo,         //
+		cmd.GetArchiveInfoReq:         g.GetArchiveInfo,
+		cmd.SetArchiveInfoReq:         g.SetArchiveInfo,
 		cmd.PlayerAbilityListReq:      g.PlayerAbilityList,      //
 		cmd.PosterIllustrationListReq: g.PosterIllustrationList, //
 		cmd.WorldLevelAchieveListReq:  g.WorldLevelAchieveList,  //

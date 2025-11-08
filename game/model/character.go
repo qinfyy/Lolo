@@ -15,23 +15,27 @@ func DefaultCharacterModel() *CharacterModel {
 	info := &CharacterModel{
 		CharacterMap: make(map[uint32]*CharacterInfo),
 	}
-	// for _, characterId := range gdconf.GetConstant().DefaultCharacter {
-	// 	characterInfo := NewCharacterInfo(characterId)
-	// 	if characterInfo == nil {
-	// 		log.Game.Errorf("初始化默认角色:%v失败", characterId)
-	// 		continue
-	// 	}
-	// 	info.CharacterMap[characterId] = characterInfo
-	// }
+	for _, characterId := range gdconf.GetConstant().DefaultCharacter {
+		characterInfo := NewCharacterInfo(characterId)
+		if characterInfo == nil {
+			log.Game.Errorf("初始化默认角色:%v失败", characterId)
+			continue
+		}
+		info.CharacterMap[characterId] = characterInfo
+	}
+	return info
+}
+
+func (c *CharacterModel) AllCharacterModel() {
+	c.CharacterMap = make(map[uint32]*CharacterInfo)
 	for _, conf := range gdconf.GetCharacterAllMap() {
 		characterInfo := NewCharacterInfo(conf.CharacterId)
 		if characterInfo == nil {
-			log.Game.Errorf("初始化默认角色:%v失败", conf.CharacterId)
+			log.Game.Errorf("添加角色:%v失败", conf.CharacterId)
 			continue
 		}
-		info.CharacterMap[conf.CharacterId] = characterInfo
+		c.CharacterMap[conf.CharacterId] = characterInfo
 	}
-	return info
 }
 
 func (s *Player) GetCharacterModel() *CharacterModel {

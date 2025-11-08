@@ -37,6 +37,28 @@ func (i *ItemModel) NextInstanceIndex() uint32 {
 	return i.InstanceIndex
 }
 
+func (i *ItemModel) AllItemModel() {
+	for tag, confList := range gdconf.GetItemByNewBagItemTagAll() {
+		switch tag {
+		case proto.EBagItemTag_EBagItemTag_Badge,
+			proto.EBagItemTag_EBagItemTag_Umbrella:
+			for _, conf := range confList {
+				i.AddItemBase(uint32(conf.ID), 999)
+			}
+		case proto.EBagItemTag_EBagItemTag_Weapon:
+			for _, conf := range confList {
+				i.AddItemWeaponInfo(uint32(conf.ID))
+			}
+		case proto.EBagItemTag_EBagItemTag_Fashion:
+			for _, conf := range confList {
+				i.AddItemFashionInfo(uint32(conf.ID))
+			}
+		case proto.EBagItemTag_EBagItemTag_Armor:
+		case proto.EBagItemTag_EBagItemTag_Poster:
+		}
+	}
+}
+
 type EBagItemTag interface {
 	GetPbItemDetail() *proto.ItemDetail
 }
@@ -69,7 +91,7 @@ func (i *ItemModel) AddItemBase(itemId uint32, num int64) {
 		info = &ItemBaseInfo{
 			ItemId:   itemId,
 			Num:      0,
-			ItemType: proto.EBagItemTag_EBagItemTag_Badge,
+			ItemType: proto.EBagItemTag(conf.NewBagItemTag),
 		}
 		list[itemId] = info
 	}

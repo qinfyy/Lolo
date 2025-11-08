@@ -39,3 +39,13 @@ func (g *Game) ChallengeFriendRank(s *model.Player, msg *alg.GameMsg) {
 	}
 	defer g.send(s, cmd.ChallengeFriendRankRsp, msg.PacketId, rsp)
 }
+
+func (g *Game) FriendIntervalInit(s *model.Player, msg *alg.GameMsg) {
+	// req := msg.Body.(*proto.FriendIntervalInitReq)
+	rsp := &proto.FriendIntervalInitRsp{
+		Status:      proto.StatusCode_StatusCode_OK,
+		FriendInfos: make([]*proto.IntervalInfo, 0),
+		JoinInfos:   make([]*proto.IntervalInfo, 0),
+	}
+	defer g.send(s, cmd.FriendIntervalInitRsp, msg.PacketId, rsp)
+}
