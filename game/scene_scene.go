@@ -51,14 +51,14 @@ func (w *WordInfo) getAllSceneInfo() map[uint32]*SceneInfo {
 	return w.allScene
 }
 
-func (w *WordInfo) getSceneInfo(sceneId uint32) *SceneInfo {
+func (w *WordInfo) getSceneInfo(sceneId uint32) (*SceneInfo, error) {
 	list := w.getAllSceneInfo()
 	if info, ok := list[sceneId]; ok {
-		return info
+		return info, nil
 	}
 	cfg := gdconf.GetSceneInfo(sceneId)
 	if cfg == nil {
-		return nil
+		return nil, errors.New("没有该场景")
 	}
 	info := &SceneInfo{
 		cfg:        cfg,
@@ -66,7 +66,7 @@ func (w *WordInfo) getSceneInfo(sceneId uint32) *SceneInfo {
 		allChannel: make(map[uint32]*ChannelInfo),
 	}
 	list[sceneId] = info
-	return info
+	return info, nil
 }
 
 func (w *WordInfo) getAllScenePlayer() map[uint32]*ScenePlayer {
@@ -83,6 +83,14 @@ func (w *WordInfo) getScenePlayer(player *model.Player) *ScenePlayer {
 	}
 	// 场景中没有该玩家
 	return nil
+}
+
+func (w *WordInfo) getChannel(sceneId, channelId uint32) (*ChannelInfo, error) {
+	sceneInfo, err := w.getSceneInfo(sceneId)
+	if err != nil {
+		return nil, err
+	}
+	return sceneInfo.getSceneChannel(channelId)
 }
 
 // 获取目标场景下的全部房间
@@ -119,12 +127,12 @@ func (w *WordInfo) addScenePlayer(player *model.Player) *ScenePlayer {
 	defaultSceneId := gdconf.GetConstant().DefaultSceneId
 	defaultChannelId := gdconf.GetConstant().DefaultChannelId
 
-	sceneInfo := w.getSceneInfo(defaultSceneId)
-	if sceneInfo == nil {
-		log.Game.Error("默认场景不存在！请检查默认场景配置是否正确")
+	sceneInfo, err := w.getSceneInfo(defaultSceneId)
+	if err != nil {
+		log.Game.Errorf("默认场景不存在！请检查默认场景配置是否正确err:%s", err.Error())
 		return nil
 	}
-	_, err := sceneInfo.getSceneChannel(defaultChannelId)
+	_, err = sceneInfo.getSceneChannel(defaultChannelId)
 	if err != nil {
 		log.Game.Error(err.Error())
 		return nil
@@ -149,14 +157,15 @@ func (g *Game) joinSceneChannel(s *model.Player) {
 		log.Game.Warnf("玩家:%v没有准备好加入房间", s.UserId)
 		return
 	}
-	sceneInfo := g.getWordInfo().getSceneInfo(scenePlayer.SceneId)
+	sceneInfo, err := g.getWordInfo().getSceneInfo(scenePlayer.SceneId)
 	if sceneInfo == nil {
-		log.Game.Errorf("场景:%v不存在！", scenePlayer.SceneId)
+		log.Game.Errorf("场景:%v不存在！err:%s", scenePlayer.SceneId, err.Error())
 		return
 	}
 	channelInfo, err := sceneInfo.getSceneChannel(scenePlayer.ChannelId)
 	if err != nil {
-		log.Game.Errorf("场景:%v,房间:%v不存在！", scenePlayer.SceneId, scenePlayer.ChannelId)
+		log.Game.Errorf("场景:%v,房间:%v不存在！err:%s",
+			scenePlayer.SceneId, scenePlayer.ChannelId, err.Error())
 		return
 	}
 	scenePlayer.channelInfo = channelInfo

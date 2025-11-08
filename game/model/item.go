@@ -133,7 +133,7 @@ func (i *ItemModel) GetItemWeaponInfo(instanceId uint32) *ItemWeaponInfo {
 }
 
 func (i *ItemModel) AddItemWeaponInfo(weaponId uint32) *ItemWeaponInfo {
-	conf := gdconf.GetWeaponConfigure(weaponId)
+	conf := gdconf.GetWeaponAllInfo(weaponId)
 	list := i.GetItemWeaponMap()
 	if conf == nil || list == nil {
 		log.Game.Warnf("添加Weapon失败,数据异常或不存在ID:%v", weaponId)
@@ -141,9 +141,9 @@ func (i *ItemModel) AddItemWeaponInfo(weaponId uint32) *ItemWeaponInfo {
 	}
 	instanceId := i.NextInstanceIndex()
 	info := &ItemWeaponInfo{
-		WeaponId:         uint32(conf.ItemID),
+		WeaponId:         conf.WeaponId,
 		InstanceId:       instanceId,
-		WeaponSystemType: proto.EWeaponSystemType(conf.NewWeaponSystemType),
+		WeaponSystemType: proto.EWeaponSystemType(conf.WeaponInfo.NewWeaponSystemType),
 		Attack:           1,
 		DamageBalance:    1,
 		CriticalRatio:    1,

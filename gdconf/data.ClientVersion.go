@@ -5,10 +5,10 @@ type ClientVersion struct {
 }
 
 func (g *GameConfig) loadClientVersion() {
-	g.ClientVersion = new(ClientVersion)
-	ReadJson(g.dataPath, "ClientVersion.json", &g.ClientVersion)
+	g.Data.ClientVersion = new(ClientVersion)
+	ReadJson(g.dataPath, "ClientVersion.json", &g.Data.ClientVersion)
 }
 
 func GetClientVersion(v string) string {
-	return cc.ClientVersion.VersionMap[v]
+	return cc.Data.ClientVersion.VersionMap[v]
 }

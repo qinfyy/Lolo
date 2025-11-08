@@ -5,23 +5,38 @@ import (
 )
 
 type Weapon struct {
-	AllWeaponDatas *excel.AllWeaponDatas
-	WeaponMap      map[int32]*excel.WeaponConfigure
+	all          *excel.AllWeaponDatas
+	WeaponAllMap map[uint32]*WeaponAllInfo
+}
+
+type WeaponAllInfo struct {
+	WeaponId   uint32
+	WeaponInfo *excel.WeaponConfigure
 }
 
 func (g *GameConfig) loadWeapon() {
 	info := &Weapon{
-		AllWeaponDatas: new(excel.AllWeaponDatas),
-		WeaponMap:      make(map[int32]*excel.WeaponConfigure),
+		all:          new(excel.AllWeaponDatas),
+		WeaponAllMap: make(map[uint32]*WeaponAllInfo),
 	}
 	g.Excel.Weapon = info
 	name := "Weapon.json"
-	ReadJson(g.excelPath, name, &info.AllWeaponDatas)
-	for _, v := range info.AllWeaponDatas.GetWeapon().GetDatas() {
-		info.WeaponMap[v.ID] = v
+	ReadJson(g.excelPath, name, &info.all)
+
+	getWeaponAllInfo := func(id int32) *WeaponAllInfo {
+		if info.WeaponAllMap[uint32(id)] == nil {
+			info.WeaponAllMap[uint32(id)] = &WeaponAllInfo{
+				WeaponId: uint32(id),
+			}
+		}
+		return info.WeaponAllMap[uint32(id)]
+	}
+
+	for _, v := range info.all.GetWeapon().GetDatas() {
+		getWeaponAllInfo(v.ID).WeaponInfo = v
 	}
 }
 
-func GetWeaponConfigure(id uint32) *excel.WeaponConfigure {
-	return cc.Excel.Weapon.WeaponMap[int32(id)]
+func GetWeaponAllInfo(id uint32) *WeaponAllInfo {
+	return cc.Excel.Weapon.WeaponAllMap[id]
 }

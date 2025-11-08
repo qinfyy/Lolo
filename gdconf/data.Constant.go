@@ -19,10 +19,10 @@ type Constant struct {
 }
 
 func (g *GameConfig) loadConstant() {
-	g.Constant = new(Constant)
-	ReadJson(g.dataPath, "Constant.json", &g.Constant)
+	g.Data.Constant = new(Constant)
+	ReadJson(g.dataPath, "Constant.json", &g.Data.Constant)
 }
 
 func GetConstant() *Constant {
-	return cc.Constant
+	return cc.Data.Constant
 }

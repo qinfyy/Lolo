@@ -43,7 +43,7 @@ func (g *Game) GetWeapon(s *model.Player, msg *alg.GameMsg) {
 		Status:   proto.StatusCode_StatusCode_OK,
 		Weapons:  make([]*proto.WeaponInstance, 0),
 		TotalNum: uint32(len(s.GetItemModel().GetItemWeaponMap())),
-		EndIndex: 0,
+		EndIndex: uint32(len(s.GetItemModel().GetItemWeaponMap())),
 	}
 	defer g.send(s, cmd.GetWeaponRsp, msg.PacketId, rsp)
 	for _, v := range s.GetItemModel().GetItemWeaponMap() {
@@ -59,8 +59,8 @@ func (g *Game) GetArmor(s *model.Player, msg *alg.GameMsg) {
 	rsp := &proto.GetArmorRsp{
 		Status:   proto.StatusCode_StatusCode_OK,
 		Armors:   make([]*proto.ArmorInstance, 0),
-		TotalNum: 0,
-		EndIndex: 0,
+		TotalNum: uint32(len(s.GetItemModel().GetItemArmorMap())),
+		EndIndex: uint32(len(s.GetItemModel().GetItemArmorMap())),
 	}
 	defer g.send(s, cmd.GetArmorRsp, msg.PacketId, rsp)
 	for _, v := range s.GetItemModel().GetItemArmorMap() {
@@ -76,8 +76,8 @@ func (g *Game) GetPoster(s *model.Player, msg *alg.GameMsg) {
 	rsp := &proto.GetPosterRsp{
 		Status:   proto.StatusCode_StatusCode_OK,
 		Posters:  make([]*proto.PosterInstance, 0),
-		TotalNum: 0,
-		EndIndex: 0,
+		TotalNum: uint32(len(s.GetItemModel().GetItemPosterMap())),
+		EndIndex: uint32(len(s.GetItemModel().GetItemPosterMap())),
 	}
 	defer g.send(s, cmd.GetPosterRsp, msg.PacketId, rsp)
 	for _, v := range s.GetItemModel().GetItemPosterMap() {

@@ -10,29 +10,26 @@ import (
 
 	"gucooing/lolo/config"
 	"gucooing/lolo/pkg/log"
-	"gucooing/lolo/protocol/excel"
 )
 
 var cc *GameConfig
 
 type GameConfig struct {
-	dataPath   string
-	excelPath  string
-	configPath string
+	dataPath    string
+	baseResPath string
+	excelPath   string
+	configPath  string
 
 	Excel  *Excel
 	Config *Config
-
-	Constant      *Constant
-	ClientVersion *ClientVersion
+	Data   *Data
 }
 
 func LoadGameConfig() *GameConfig {
 	cfg := config.GetResources()
 	c := new(GameConfig)
 	c.dataPath = cfg.GetDataPath()
-	c.excelPath = cfg.GetExcelPath()
-	c.configPath = cfg.GetConfigPath()
+	c.baseResPath = cfg.GetResourcePath()
 	log.App.Debug("开始读取资源文件")
 	startTime := time.Now()
 	c.load()
@@ -50,43 +47,54 @@ func (g *GameConfig) load() {
 		panic(info)
 	}
 	g.dataPath += "/"
+	g.Data = new(Data)
 
 	// 验证文件夹是否存在
+	g.excelPath = g.baseResPath + "/Excel"
 	if dirInfo, err := os.Stat(g.excelPath); err != nil || !dirInfo.IsDir() {
 		info := fmt.Sprintf("找不到文件夹:%s,err:%s", g.excelPath, err)
 		panic(info)
 	}
 	g.excelPath += "/"
+	g.Excel = new(Excel)
 
 	// 验证文件夹是否存在
+	g.configPath = g.baseResPath + "/Config"
 	if dirInfo, err := os.Stat(g.configPath); err != nil || !dirInfo.IsDir() {
 		info := fmt.Sprintf("找不到文件夹:%s,err:%s", g.configPath, err)
 		panic(info)
 	}
 	g.configPath += "/"
-
-	g.Excel = new(Excel)
 	g.Config = new(Config)
 
 	// data
 	g.loadConstant()
 	g.loadClientVersion()
 
-	// 初始化excel
+	// excel
 	g.loadHead()
 	g.loadCharacter()
 	g.loadItem()
 	g.loadWeapon()
+	g.loadGacha()
+	g.loadQuest()
 
 	// config
 	g.loadSceneConfig()
 }
 
+type Data struct {
+	Constant      *Constant
+	ClientVersion *ClientVersion
+}
+
 type Excel struct {
-	AllHeadDatas *excel.AllHeadDatas
-	Character    *Character
-	Item         *Item
-	Weapon       *Weapon
+	Head      *Head
+	Character *Character
+	Item      *Item
+	Weapon    *Weapon
+	Gacha     *Gacha
+	Quest     *Quest
 }
 
 type Config struct {

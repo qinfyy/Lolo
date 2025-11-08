@@ -23,13 +23,13 @@ func DefaultCharacterModel() *CharacterModel {
 	// 	}
 	// 	info.CharacterMap[characterId] = characterInfo
 	// }
-	for _, conf := range gdconf.GetCharacterMap() {
-		characterInfo := NewCharacterInfo(uint32(conf.ID))
+	for _, conf := range gdconf.GetCharacterAllMap() {
+		characterInfo := NewCharacterInfo(conf.CharacterId)
 		if characterInfo == nil {
-			log.Game.Errorf("初始化默认角色:%v失败", conf.ID)
+			log.Game.Errorf("初始化默认角色:%v失败", conf.CharacterId)
 			continue
 		}
-		info.CharacterMap[uint32(conf.ID)] = characterInfo
+		info.CharacterMap[conf.CharacterId] = characterInfo
 	}
 	return info
 }
@@ -58,12 +58,12 @@ type CharacterInfo struct {
 }
 
 func NewCharacterInfo(characterId uint32) *CharacterInfo {
-	conf := gdconf.GetCharacter(int32(characterId))
+	conf := gdconf.GetCharacterAll(characterId)
 	if conf == nil {
 		return nil
 	}
 	info := &CharacterInfo{
-		CharacterId: uint32(conf.ID),
+		CharacterId: conf.CharacterId,
 		Level:       1,
 		Exp:         0,
 		Star:        0,
@@ -97,7 +97,7 @@ func (s *Player) AddCharacter(characterId uint32) bool {
 	if list == nil {
 		return false
 	}
-	conf := gdconf.GetCharacter(int32(characterId))
+	conf := gdconf.GetCharacterAll(characterId)
 	if conf == nil {
 		log.Game.Warnf("尝试添加不存在的角色:%v", characterId)
 		return false
@@ -203,7 +203,7 @@ type CharacterSkill struct {
 }
 
 func NewCharacterSkillList(id uint32) map[uint32]*CharacterSkill {
-	conf := gdconf.GetCharacter(int32(id))
+	conf := gdconf.GetCharacterAll(id)
 	if conf == nil {
 		log.Game.Warnf("添加技能的角色不存在id:%v", id)
 		return nil
@@ -215,10 +215,10 @@ func NewCharacterSkillList(id uint32) map[uint32]*CharacterSkill {
 			SkillLevel: 1,
 		}
 	}
-	for _, skillId := range conf.GetSpellIDs() {
+	for _, skillId := range conf.CharacterInfo.GetSpellIDs() {
 		addSkill(uint32(skillId))
 	}
-	for _, skillId := range conf.GetExSpellIDs() {
+	for _, skillId := range conf.CharacterInfo.GetExSpellIDs() {
 		addSkill(uint32(skillId))
 	}
 	return list
@@ -279,7 +279,7 @@ func (a *PosterInfo) PosterInfo() *proto.PosterInfo {
 }
 
 func (s *Player) NewEquipmentPresetList(id uint32) map[uint32]*EquipmentPreset {
-	conf := gdconf.GetCharacter(int32(id))
+	conf := gdconf.GetCharacterAll(id)
 	if conf == nil {
 		log.Game.Warnf("角色:%v获取初始装备套装失败", id)
 		return nil
@@ -294,9 +294,9 @@ func (s *Player) NewEquipmentPresetList(id uint32) map[uint32]*EquipmentPreset {
 		}
 		if i == 0 {
 			// 添加武器
-			itemWeapon := s.GetItemModel().AddItemWeaponInfo(uint32(conf.DefaultWeaponID))
+			itemWeapon := s.GetItemModel().AddItemWeaponInfo(uint32(conf.CharacterInfo.DefaultWeaponID))
 			if itemWeapon == nil {
-				log.Game.Warnf("角色:%v,添加默认武器:%v失败", id, conf.DefaultWeaponID)
+				log.Game.Warnf("角色:%v,添加默认武器:%v失败", id, conf.CharacterInfo.DefaultWeaponID)
 				return nil
 			}
 			itemWeapon.SetWearerId(id)
@@ -385,7 +385,7 @@ func (o *OutfitHideInfo) OutfitHideInfo() *proto.OutfitHideInfo {
 }
 
 func (s *Player) NewOutfitPresetList(id uint32) map[uint32]*OutfitPreset {
-	conf := gdconf.GetCharacter(int32(id))
+	conf := gdconf.GetCharacterAll(id)
 	if conf == nil {
 		log.Game.Warnf("角色:%v获取初始服装套装失败", id)
 		return nil
@@ -397,21 +397,21 @@ func (s *Player) NewOutfitPresetList(id uint32) map[uint32]*OutfitPreset {
 		}
 		return s.GetItemModel().AddItemFashionInfo(outfitId)
 	}
-	if !addOutfit(uint32(conf.HatID)) {
+	if !addOutfit(uint32(conf.CharacterInfo.HatID)) {
 		goto err
 	}
-	if !addOutfit(uint32(conf.HairID)) {
+	if !addOutfit(uint32(conf.CharacterInfo.HairID)) {
 		goto err
 	}
-	if !addOutfit(uint32(conf.ClothID)) {
+	if !addOutfit(uint32(conf.CharacterInfo.ClothID)) {
 		goto err
 	}
 	for i := 0; i < gdconf.GetConstant().OutfitPresetNum; i++ {
 		info := &OutfitPreset{
 			PresetIndex:            uint32(i),
-			Hat:                    uint32(conf.HatID),
-			Hair:                   uint32(conf.HairID),
-			Clothes:                uint32(conf.ClothID),
+			Hat:                    uint32(conf.CharacterInfo.HatID),
+			Hair:                   uint32(conf.CharacterInfo.HairID),
+			Clothes:                uint32(conf.CharacterInfo.ClothID),
 			Ornament:               0,
 			HatDyeSchemeIndex:      0,
 			HairDyeSchemeIndex:     0,

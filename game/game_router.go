@@ -18,8 +18,9 @@ func (g *Game) newRouter() {
 		// 玩家基础信息
 		cmd.PlayerMainDataReq: g.PlayerMainData, // 获取玩家信息
 		// 场景
-		cmd.PlayerSceneRecordReq: g.PlayerSceneRecord, // 玩家场景同步器
-		cmd.SendActionReq:        g.SendAction,        // 场景自动化同步器
+		cmd.PlayerSceneRecordReq:  g.PlayerSceneRecord,  // 玩家场景同步器
+		cmd.SendActionReq:         g.SendAction,         // 场景自动化同步器
+		cmd.ChangeSceneChannelReq: g.ChangeSceneChannel, // 切换场景/房间
 		// 队伍
 		cmd.UpdateTeamReq: g.UpdateTeam, // 更新队伍
 		// 物品
@@ -32,6 +33,10 @@ func (g *Game) newRouter() {
 		cmd.GetCharacterAchievementListReq: g.GetCharacterAchievementList, // 获取角色成就情况
 		cmd.OutfitPresetUpdateReq:          g.OutfitPresetUpdate,          // 保存预设装扮
 
+		cmd.NpcTalkReq:                g.NpcTalk,  // npc对话
+		cmd.TutorialReq:               g.Tutorial, // 开始教程
+		cmd.SetArchiveInfoReq:         g.SetArchiveInfo,
+		cmd.ChallengeFriendRankReq:    g.ChallengeFriendRank,
 		cmd.GenericSceneBReq:          g.GenericSceneB,
 		cmd.AbilityBadgeListReq:       g.AbilityBadgeList,
 		cmd.SceneProcessListReq:       g.SceneProcessList,

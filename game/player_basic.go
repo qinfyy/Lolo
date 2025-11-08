@@ -153,7 +153,12 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 		rsp.PlayerDropRateInfo = s.GetPbPlayerDropRateInfo()
 		rsp.QuestDetail = s.GetQuestDetail()
 		rsp.QuestionnaireInfo = s.GetPlayerQuestionnaireInfo()
-		rsp.UnlockFunctions = make([]uint32, 0)
+		rsp.UnlockFunctions = []uint32{
+			100000003,
+			100000006,
+			100000009,
+			100000021,
+		}
 	}
 }
 

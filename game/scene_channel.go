@@ -15,34 +15,38 @@ import (
 )
 
 type ChannelInfo struct {
-	SceneId     uint32                  // 场景号
-	ChannelId   uint32                  // 房间号
-	allPlayer   map[uint32]*ScenePlayer // 当前房间的全部玩家
-	weatherType proto.WeatherType       // 天气
-	todTime     uint32                  // 时间
-	tick        time.Duration           // 时间刻 ms
-	doneChan    chan struct{}           // done
-
+	SceneInfo        *SceneInfo                            // 所属场景
+	ChannelId        uint32                                // 房间号
+	allPlayer        map[uint32]*ScenePlayer               // 当前房间的全部玩家
+	weatherType      proto.WeatherType                     // 天气
+	todTime          uint32                                // 时间
+	tick             time.Duration                         // 时间刻 ms
+	doneChan         chan struct{}                         // done
+	sceneSyncDatas   []*proto.SceneSyncData                // 一个tick中待同步的内容
+	sceneServerDatas map[uint32]*proto.ServerSceneSyncData // 一个tick中玩家变动内容
+	// chan
 	addScenePlayerChan   chan *ScenePlayer         // 玩家进入通道
-	addSceneSyncDataChan chan *proto.SceneSyncData // 同步器添加通道
-	sceneSyncDatas       []*proto.SceneSyncData    // 同步器
+	delScenePlayerChan   chan *ScenePlayer         // 玩家退出通道
+	addSceneSyncDataChan chan *proto.SceneSyncData // 同步器通道
 	serverSceneSyncChan  chan *ServerSceneSyncCtx  // 服务端场景同步通道
 	actionSyncChan       chan *ActionSyncCtx       // action同步通道
 }
 
 func (s *SceneInfo) newChannelInfo(channelId uint32) *ChannelInfo {
 	info := &ChannelInfo{
-		SceneId:              s.SceneId,
+		SceneInfo:            s,
 		ChannelId:            channelId,
 		allPlayer:            make(map[uint32]*ScenePlayer),
 		weatherType:          proto.WeatherType_WeatherType_RAINY,
 		tick:                 time.Duration(alg.MaxInt(50, gdconf.GetConstant().ChannelTick)) * time.Millisecond,
 		doneChan:             make(chan struct{}),
-		addScenePlayerChan:   make(chan *ScenePlayer, 1000),
-		addSceneSyncDataChan: make(chan *proto.SceneSyncData, 1000),
-		sceneSyncDatas:       make([]*proto.SceneSyncData, 1000),
-		serverSceneSyncChan:  make(chan *ServerSceneSyncCtx, 1000),
-		actionSyncChan:       make(chan *ActionSyncCtx, 1000),
+		addScenePlayerChan:   make(chan *ScenePlayer, 10),
+		delScenePlayerChan:   make(chan *ScenePlayer, 10),
+		addSceneSyncDataChan: make(chan *proto.SceneSyncData, 100),
+		sceneSyncDatas:       make([]*proto.SceneSyncData, 100),
+		sceneServerDatas:     make(map[uint32]*proto.ServerSceneSyncData),
+		serverSceneSyncChan:  make(chan *ServerSceneSyncCtx, 100),
+		actionSyncChan:       make(chan *ActionSyncCtx, 100),
 	}
 
 	go info.channelMainLoop()
@@ -72,19 +76,21 @@ func (c *ChannelInfo) channelMainLoop() {
 	syncTimer := time.NewTimer(c.tick) // 0.2s 同步一次
 	defer func() {
 		syncTimer.Stop()
-		log.Game.Debugf("场景:%v房间:%v退出", c.SceneId, c.ChannelId)
+		log.Game.Debugf("场景:%v房间:%v退出", c.SceneInfo.SceneId, c.ChannelId)
 	}()
 	for {
 		select {
 		case <-syncTimer.C: // 定时同步
-			c.PlayerSceneSync()
+			c.channelTick()
 			syncTimer.Reset(c.tick)
 		case scenePlayer := <-c.addScenePlayerChan: // 玩家进入
 			c.addPlayer(scenePlayer)
+		case scenePlayer := <-c.delScenePlayerChan: // 玩家退出
+			c.delPlayer(scenePlayer)
 		case syncData := <-c.addSceneSyncDataChan: // 添加同步内容
 			alg.AddList(&c.sceneSyncDatas, syncData)
 		case ctx := <-c.serverSceneSyncChan: // 服务场景同步
-			c.ServerSceneSyncDataNotice(ctx)
+			c.serverSceneSync(ctx)
 		case ctx := <-c.actionSyncChan: // action同步
 			c.SendActionNotice(ctx)
 		case <-c.doneChan:
@@ -103,11 +109,22 @@ func (c *ChannelInfo) addPlayer(scenePlayer *ScenePlayer) bool {
 	list[scenePlayer.UserId] = scenePlayer
 	// 通知包
 	c.SceneDataNotice(scenePlayer)
-	c.ServerSceneSyncDataNotice(&ServerSceneSyncCtx{
+	c.serverSceneSync(&ServerSceneSyncCtx{
 		ScenePlayer: scenePlayer,
 		ActionType:  proto.SceneActionType_SceneActionType_ENTER,
 	})
 	return true
+}
+
+func (c *ChannelInfo) delPlayer(scenePlayer *ScenePlayer) {
+	list := c.getAllPlayer()
+	if _, ok := list[scenePlayer.UserId]; ok {
+		delete(list, scenePlayer.UserId)
+	}
+	c.serverSceneSync(&ServerSceneSyncCtx{
+		ScenePlayer: scenePlayer,
+		ActionType:  proto.SceneActionType_SceneActionType_LEAVE,
+	})
 }
 
 // 通知客户端场景信息
@@ -133,40 +150,53 @@ type ServerSceneSyncCtx struct {
 	ActionType  proto.SceneActionType
 }
 
-// 通知全部客户端执行Action
-func (c *ChannelInfo) ServerSceneSyncDataNotice(ctx *ServerSceneSyncCtx) {
-	notice := &proto.ServerSceneSyncDataNotice{
-		Status: proto.StatusCode_StatusCode_OK,
-		Data:   make([]*proto.ServerSceneSyncData, 0),
+func (c *ChannelInfo) serverSceneSync(ctx *ServerSceneSyncCtx) {
+	playerData, ok := c.sceneServerDatas[ctx.ScenePlayer.UserId]
+	if !ok {
+		playerData = &proto.ServerSceneSyncData{
+			PlayerId:   ctx.ScenePlayer.UserId,
+			ServerData: make([]*proto.SceneServerData, 0),
+		}
+		c.sceneServerDatas[ctx.ScenePlayer.UserId] = playerData
 	}
-	defer c.sendAllPlayer(cmd.ServerSceneSyncDataNotice, 0, notice)
-	syncData := &proto.ServerSceneSyncData{
-		PlayerId:   ctx.ScenePlayer.UserId,
-		ServerData: nil,
+	serverData := &proto.SceneServerData{
+		ActionType: ctx.ActionType,
 	}
-	alg.AddList(&notice.Data, syncData)
+	alg.AddList(&playerData.ServerData, serverData)
 	switch ctx.ActionType {
-	case proto.SceneActionType_SceneActionType_ENTER, /*进入场景*/
-		proto.SceneActionType_SceneActionType_UPDATE_TEAM: /*更新队伍*/
-		syncData.ServerData = []*proto.SceneServerData{
-			{
-				ActionType: ctx.ActionType,
-				Player:     c.GetPbScenePlayer(ctx.ScenePlayer),
-				TodTime:    0,
-			},
+	case proto.SceneActionType_SceneActionType_ENTER: // 进入场景
+		serverData.Player = c.GetPbScenePlayer(ctx.ScenePlayer)
+	case proto.SceneActionType_SceneActionType_LEAVE: // 退出场景
+	case proto.SceneActionType_SceneActionType_UPDATE_TEAM: // 更新队伍
+		serverData.Player = &proto.ScenePlayer{
+			Team: c.GetPbSceneTeam(ctx.ScenePlayer),
 		}
 	}
 }
 
-func (c *ChannelInfo) PlayerSceneSync() {
-	notice := &proto.PlayerSceneSyncDataNotice{
-		Status: proto.StatusCode_StatusCode_OK,
-		Data:   c.sceneSyncDatas,
-	}
-	c.sceneSyncDatas = make([]*proto.SceneSyncData, 0)
-	if len(notice.Data) > 0 {
+func (c *ChannelInfo) channelTick() {
+	// 场景变化同步
+	if len(c.sceneSyncDatas) > 0 {
+		notice := &proto.PlayerSceneSyncDataNotice{
+			Status: proto.StatusCode_StatusCode_OK,
+			Data:   c.sceneSyncDatas,
+		}
 		c.sendAllPlayer(cmd.PlayerSceneSyncDataNotice, 0, notice)
+		c.sceneSyncDatas = make([]*proto.SceneSyncData, 0)
 	}
+	// 玩家变化同步
+	if len(c.sceneServerDatas) > 0 {
+		notice := &proto.ServerSceneSyncDataNotice{
+			Status: proto.StatusCode_StatusCode_OK,
+			Data:   make([]*proto.ServerSceneSyncData, 0),
+		}
+		for _, data := range c.sceneServerDatas {
+			alg.AddList(&notice.Data, data)
+		}
+		c.sendAllPlayer(cmd.ServerSceneSyncDataNotice, 0, notice)
+		c.sceneServerDatas = make(map[uint32]*proto.ServerSceneSyncData)
+	}
+
 }
 
 // action同步上下文
@@ -190,7 +220,7 @@ func (c *ChannelInfo) SendActionNotice(ctx *ActionSyncCtx) {
 
 func (c *ChannelInfo) GetPbSceneData() (info *proto.SceneData) {
 	info = &proto.SceneData{
-		SceneId:        c.SceneId, // ok
+		SceneId:        c.SceneInfo.SceneId, // ok
 		GatherLimits:   make([]*proto.GatherLimit, 0),
 		DropItems:      make([]*proto.DropItem, 0),
 		Areas:          make([]*proto.AreaData, 0),

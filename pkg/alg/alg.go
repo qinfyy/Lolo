@@ -25,3 +25,10 @@ func MaxInt(a, b int) int {
 	}
 	return b
 }
+
+func NoZero[T comparable](a *T, b T) {
+	var zero T
+	if b != zero {
+		*a = b
+	}
+}

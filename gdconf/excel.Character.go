@@ -5,27 +5,42 @@ import (
 )
 
 type Character struct {
-	AllCharacterDatas *excel.AllCharacterDatas
-	CharacterMap      map[int32]*excel.CharacterConfigure
+	all             *excel.AllCharacterDatas
+	CharacterAllMap map[uint32]*CharacterAllInfo
+}
+
+type CharacterAllInfo struct {
+	CharacterId   uint32
+	CharacterInfo *excel.CharacterConfigure
 }
 
 func (g *GameConfig) loadCharacter() {
 	info := &Character{
-		AllCharacterDatas: new(excel.AllCharacterDatas),
-		CharacterMap:      make(map[int32]*excel.CharacterConfigure),
+		all:             new(excel.AllCharacterDatas),
+		CharacterAllMap: make(map[uint32]*CharacterAllInfo),
 	}
 	g.Excel.Character = info
 	name := "Character.json"
-	ReadJson(g.excelPath, name, &info.AllCharacterDatas)
-	for _, v := range info.AllCharacterDatas.GetCharacter().GetDatas() {
-		info.CharacterMap[v.ID] = v
+	ReadJson(g.excelPath, name, &info.all)
+
+	getCharacterAllMap := func(id int32) *CharacterAllInfo {
+		if info.CharacterAllMap[uint32(id)] == nil {
+			info.CharacterAllMap[uint32(id)] = &CharacterAllInfo{
+				CharacterId: uint32(id),
+			}
+		}
+		return info.CharacterAllMap[uint32(id)]
+	}
+
+	for _, v := range info.all.GetCharacter().GetDatas() {
+		getCharacterAllMap(v.ID).CharacterInfo = v
 	}
 }
 
-func GetCharacterMap() map[int32]*excel.CharacterConfigure {
-	return cc.Excel.Character.CharacterMap
+func GetCharacterAllMap() map[uint32]*CharacterAllInfo {
+	return cc.Excel.Character.CharacterAllMap
 }
 
-func GetCharacter(id int32) *excel.CharacterConfigure {
-	return cc.Excel.Character.CharacterMap[id]
+func GetCharacterAll(id uint32) *CharacterAllInfo {
+	return cc.Excel.Character.CharacterAllMap[id]
 }

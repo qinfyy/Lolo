@@ -4,8 +4,15 @@ import (
 	"gucooing/lolo/protocol/excel"
 )
 
+type Head struct {
+	all *excel.AllHeadDatas
+}
+
 func (g *GameConfig) loadHead() {
-	g.Excel.AllHeadDatas = new(excel.AllHeadDatas)
+	info := &Head{
+		all: new(excel.AllHeadDatas),
+	}
+	g.Excel.Head = info
 	name := "Head.json"
-	ReadJson(g.excelPath, name, &g.Excel.AllHeadDatas)
+	ReadJson(g.excelPath, name, &info.all)
 }

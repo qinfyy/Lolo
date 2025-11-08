@@ -26,3 +26,16 @@ func (g *Game) WishListByFriendId(s *model.Player, msg *alg.GameMsg) {
 	}
 	defer g.send(s, cmd.WishListByFriendIdRsp, msg.PacketId, rsp)
 }
+
+func (g *Game) ChallengeFriendRank(s *model.Player, msg *alg.GameMsg) {
+	// req := msg.Body.(*proto.ChallengeFriendRankReq)
+	rsp := &proto.ChallengeFriendRankRsp{
+		Status:   proto.StatusCode_StatusCode_OK,
+		RankInfo: make([]*proto.ChallengeFriendRankInfo, 0),
+		SelfChallenge: &proto.PlayerChallengeCache{
+			PlayerId:       s.UserId,
+			ChallengeInfos: make([]*proto.PlayerChallengeInfo, 0),
+		},
+	}
+	defer g.send(s, cmd.ChallengeFriendRankRsp, msg.PacketId, rsp)
+}

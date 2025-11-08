@@ -5,23 +5,23 @@ import (
 )
 
 type Item struct {
-	AllItemDatas *excel.AllItemDatas
-	ItemMap      map[int32]*excel.ItemConfigure
+	all     *excel.AllItemDatas
+	ItemMap map[uint32]*excel.ItemConfigure
 }
 
 func (g *GameConfig) loadItem() {
 	info := &Item{
-		AllItemDatas: new(excel.AllItemDatas),
-		ItemMap:      make(map[int32]*excel.ItemConfigure),
+		all:     new(excel.AllItemDatas),
+		ItemMap: make(map[uint32]*excel.ItemConfigure),
 	}
 	g.Excel.Item = info
 	name := "Item.json"
-	ReadJson(g.excelPath, name, &info.AllItemDatas)
-	for _, v := range info.AllItemDatas.GetItem().GetDatas() {
-		info.ItemMap[v.ID] = v
+	ReadJson(g.excelPath, name, &info.all)
+	for _, v := range info.all.GetItem().GetDatas() {
+		info.ItemMap[uint32(v.ID)] = v
 	}
 }
 
 func GetItemConfigure(id uint32) *excel.ItemConfigure {
-	return cc.Excel.Item.ItemMap[int32(id)]
+	return cc.Excel.Item.ItemMap[id]
 }
