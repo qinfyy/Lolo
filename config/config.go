@@ -9,7 +9,15 @@ import (
 	"strconv"
 )
 
+type Mode string
+
+const (
+	ModeReleases Mode = "releases"
+	ModeDev      Mode = "dev"
+)
+
 type Config struct {
+	Mode           Mode       `json:"mode"`
 	Log            *Log       `json:"Log"`
 	GucooingApiKey string     `json:"GucooingApiKey"`
 	Resources      *Resources `json:"Resources"`
@@ -21,6 +29,7 @@ type Config struct {
 }
 
 var DefaultConfig = &Config{
+	Mode:           ModeReleases,
 	Log:            defaultLog,
 	GucooingApiKey: "123456",
 	Resources:      defaultResources,
@@ -44,6 +53,10 @@ func GetConfig() *Config {
 		SetDefaultConfig()
 	}
 	return CONF
+}
+
+func GetMode() Mode {
+	return GetConfig().Mode
 }
 
 func GetLog() *Log {

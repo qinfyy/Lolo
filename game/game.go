@@ -2,6 +2,7 @@ package game
 
 import (
 	"runtime"
+	"time"
 
 	pb "google.golang.org/protobuf/proto"
 
@@ -17,6 +18,8 @@ type Game struct {
 	userMap             map[uint32]*model.Player
 	handlerFuncRouteMap map[uint32]HandlerFunc
 	wordInfo            *WordInfo
+	checkPlayerTimer    *time.Timer
+	doneChan            chan struct{}
 }
 
 type GameMsg struct {
@@ -31,6 +34,7 @@ func NewGame() *Game {
 	g := &Game{
 		gameMsgChan: make(chan *GameMsg, conf.MsgChanSize),
 		userMap:     make(map[uint32]*model.Player),
+		doneChan:    make(chan struct{}),
 	}
 	g.newRouter()
 
@@ -41,7 +45,9 @@ func NewGame() *Game {
 // 游戏主线程
 func (g *Game) gameMainLoop() {
 	runtime.LockOSThread()
+	g.checkPlayerTimer = time.NewTimer(3 * time.Minute) // 3分钟检查一次玩家
 	defer func() {
+		log.Game.Infof("game主线程停止")
 		runtime.UnlockOSThread()
 		if err := recover(); err != nil {
 			log.Game.Error("!!! GAME MAIN LOOP PANIC !!!")
@@ -50,8 +56,12 @@ func (g *Game) gameMainLoop() {
 	}()
 	for {
 		select {
+		case <-g.doneChan:
+			return
 		case msg := <-g.gameMsgChan:
 			g.RouteHandle(msg.Conn, msg.UserId, msg.GameMsg)
+		case <-g.checkPlayerTimer.C:
+			g.checkPlayer()
 		}
 	}
 }
@@ -71,8 +81,39 @@ func (g *Game) GetUser(userId uint32) *model.Player {
 	return player
 }
 
-func (g *Game) kickPlayer(userId uint32) {}
+func (g *Game) checkPlayer() {
+	playerList := make([]*model.Player, 0)
+	for _, player := range g.userMap {
+		if player.IsOffline() {
+			g.kickPlayer(player.UserId)
+		}
+		playerList = append(playerList, player)
+	}
+	go func() {
+		defer g.checkPlayerTimer.Reset(3 * time.Minute)
+		for _, player := range playerList {
+			if player.IsSave() {
+				player.SavePlayer()
+			}
+		}
+	}()
+}
+
+func (g *Game) kickPlayer(userId uint32) {
+	player := g.GetUser(userId)
+	if player == nil {
+		return
+	}
+	// 退出世界
+	g.getWordInfo().killScenePlayer(player)
+}
 
 func (g *Game) GetGameMsgChan() chan *GameMsg {
 	return g.gameMsgChan
+}
+
+func (g *Game) Close() {
+	close(g.doneChan)
+	g.checkPlayer()
+	log.Game.Infof("game退出完成")
 }

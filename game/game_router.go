@@ -33,6 +33,12 @@ func (g *Game) newRouter() {
 		// 角色
 		cmd.GetCharacterAchievementListReq: g.GetCharacterAchievementList, // 获取角色成就情况
 		cmd.OutfitPresetUpdateReq:          g.OutfitPresetUpdate,          // 保存预设装扮
+		// cmd.CharacterEquipUpdateReq:        g.CharacterEquipUpdate,        // 角色更新装备
+		// 信息记录
+		cmd.GetArchiveInfoReq: g.GetArchiveInfo, // 获取记录的信息
+		cmd.SetArchiveInfoReq: g.SetArchiveInfo, // 设置信息
+		// 星云树
+		cmd.GetCollectMoonInfoReq: g.GetCollectMoonInfo, // 获取星云树信息
 
 		cmd.BossRushInfoReq:           g.BossRushInfo,
 		cmd.FriendIntervalInitReq:     g.FriendIntervalInit,
@@ -54,10 +60,7 @@ func (g *Game) newRouter() {
 		cmd.GenericGameBReq:           g.GenericGameB,
 		cmd.GetCollectItemIdsReq:      g.GetCollectItemIds,
 		cmd.ManualListReq:             g.ManualList,
-		cmd.GetCollectMoonInfoReq:     g.GetCollectMoonInfo,
 		cmd.ChangeMusicalItemReq:      g.ChangeMusicalItem,
-		cmd.GetArchiveInfoReq:         g.GetArchiveInfo,
-		cmd.SetArchiveInfoReq:         g.SetArchiveInfo,
 		cmd.PlayerAbilityListReq:      g.PlayerAbilityList,      //
 		cmd.PosterIllustrationListReq: g.PosterIllustrationList, //
 		cmd.WorldLevelAchieveListReq:  g.WorldLevelAchieveList,  //
@@ -91,4 +94,5 @@ func (g *Game) RouteHandle(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 		return
 	}
 	handlerFunc(player, msg)
+	player.SetActiveTime()
 }

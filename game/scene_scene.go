@@ -171,3 +171,14 @@ func (g *Game) joinSceneChannel(s *model.Player) {
 	scenePlayer.channelInfo = channelInfo
 	channelInfo.addScenePlayerChan <- scenePlayer
 }
+
+func (w *WordInfo) killScenePlayer(player *model.Player) {
+	scenePlayer := w.getScenePlayer(player)
+	if scenePlayer == nil {
+		return
+	}
+	delete(w.getAllScenePlayer(), player.UserId)
+	if scenePlayer.channelInfo != nil {
+		scenePlayer.channelInfo.delScenePlayerChan <- scenePlayer // 退出房间
+	}
+}

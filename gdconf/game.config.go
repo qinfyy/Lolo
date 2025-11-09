@@ -79,6 +79,7 @@ func (g *GameConfig) load() {
 	g.loadGacha()
 	g.loadQuest()
 	g.loadPlayerUnlock()
+	g.loadStory()
 
 	// config
 	g.loadSceneConfig()
@@ -97,6 +98,7 @@ type Excel struct {
 	Gacha        *Gacha
 	Quest        *Quest
 	PlayerUnlock *PlayerUnlock
+	Story        *Story
 }
 
 type Config struct {

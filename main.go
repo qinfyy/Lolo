@@ -16,7 +16,6 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/gookit/slog"
 
 	"gucooing/lolo/config"
 	"gucooing/lolo/db"
@@ -132,7 +131,7 @@ func newLolo() {
 	clo := func() {
 		_, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		log.App.Info("Lolo Close")
+		log.App.Info("Lolo Close...")
 		s.Close()
 		g.Close()
 		l.Close()
@@ -163,7 +162,7 @@ func NewGin() (*gin.Engine, *http.Server) {
 		gin.Recovery(),
 		log.GinLog(log.App),
 		gzip.Gzip(gzip.DefaultCompression))
-	if log.App.Level >= slog.DebugLevel {
+	if config.GetMode() == config.ModeDev {
 		pprof.Register(router)
 	}
 	addr := fmt.Sprintf("%s:%s", cfg.GetInnerIp(), cfg.GetInnerPort())

@@ -3,6 +3,11 @@ package model
 import (
 	"time"
 
+	"github.com/bytedance/sonic"
+
+	"gucooing/lolo/config"
+	"gucooing/lolo/db"
+	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/pkg/ofnet"
 )
 
@@ -12,12 +17,15 @@ type Player struct {
 	NetFreeze     bool            `json:"-"`
 	Created       time.Time       `json:"-"`                       // 创建时间
 	Updated       time.Time       `json:"-"`                       // 更新时间
+	ActiveTime    time.Time       `json:"-"`                       // 上一次活跃时间
+	LastSaveTime  time.Time       `json:"-"`                       // 上一次数据保存时间
 	UserId        uint32          `json:"-"`                       // 玩家id
 	InstanceIndex uint32          `json:"instanceIndex,omitempty"` // 唯一索引生成
 	Basic         *BasicModel     `json:"basic,omitempty"`         // 基础信息
 	Item          *ItemModel      `json:"item,omitempty"`          // 背包
 	Character     *CharacterModel `json:"character,omitempty"`     // 角色
 	Team          *TeamModel      `json:"team,omitempty"`          // 队伍
+	Archive       *ArchiveModel   `json:"archive,omitempty"`       // 信息记录
 }
 
 func (s *Player) GetSeqId() uint32 {
@@ -25,4 +33,55 @@ func (s *Player) GetSeqId() uint32 {
 		return 0
 	}
 	return s.Conn.GetSeqId()
+}
+
+func (s *Player) SetActiveTime() {
+	s.ActiveTime = time.Now()
+}
+
+func (s *Player) SetLastSaveTime() {
+	s.LastSaveTime = time.Now()
+}
+
+// 是否保存玩家数据
+
+var (
+	playerSaveIntervalTime = 5 * time.Minute
+	playerCacheTime        = 5 * time.Minute
+)
+
+func (s *Player) IsSave() bool {
+	if s.ActiveTime.Before(s.LastSaveTime) ||
+		config.GetMode() == config.ModeDev {
+		return false
+	}
+	if s.LastSaveTime.Add(playerSaveIntervalTime).After(time.Now()) {
+		return false
+	}
+	return true
+}
+
+func (s *Player) IsOffline() bool {
+	if s.ActiveTime.Add(playerCacheTime).Before(time.Now()) {
+		return true
+	}
+	return false
+}
+
+func (s *Player) SavePlayer() error {
+	s.SetLastSaveTime()
+	err := db.SaveOFGame(s.UserId, func(user *db.OFGame) bool {
+		bin, err := sonic.Marshal(s)
+		if err != nil {
+			log.Game.Errorf("玩家:%v序列化失败err:%s",
+				s.UserId, err.Error())
+			return false
+		}
+		user.BinData = bin
+		return true
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

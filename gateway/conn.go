@@ -1,11 +1,7 @@
 package gateway
 
 import (
-	"errors"
-	"io"
-
 	"gucooing/lolo/db"
-	"gucooing/lolo/game"
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/pkg/ofnet"
@@ -77,24 +73,4 @@ func (g *Gateway) VerifyLoginToken(req *LoginInfo) {
 	log.Gate.Infof("UserId:%v 平台:%s 正在登录中...", ofUser.UserId, proto.AccountType(req.AccountType).String())
 
 	go g.receive(req.conn, ofUser.UserId)
-}
-
-func (g *Gateway) receive(conn ofnet.Conn, userId uint32) {
-	for {
-		msg, err := conn.Read()
-		switch {
-		case err == nil:
-			g.game.GetGameMsgChan() <- &game.GameMsg{
-				UserId:  userId,
-				Conn:    conn,
-				GameMsg: msg,
-			}
-		case errors.Is(err, io.EOF),
-			errors.Is(err, io.ErrClosedPipe):
-			return
-		default:
-			log.Gate.Errorf("%s", err)
-			return
-		}
-	}
 }

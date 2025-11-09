@@ -12,7 +12,7 @@ func (g *Game) GetArchiveInfo(s *model.Player, msg *alg.GameMsg) {
 	rsp := &proto.GetArchiveInfoRsp{
 		Status: proto.StatusCode_StatusCode_OK,
 		Key:    req.Key,
-		Value:  "",
+		Value:  s.GetArchive().GetArchiveValue(req.Key),
 	}
 	g.send(s, cmd.GetArchiveInfoRsp, msg.PacketId, rsp)
 }
@@ -24,5 +24,6 @@ func (g *Game) SetArchiveInfo(s *model.Player, msg *alg.GameMsg) {
 		Key:    req.Key,
 		Value:  req.Value,
 	}
-	g.send(s, cmd.SetArchiveInfoRsp, msg.PacketId, rsp)
+	defer g.send(s, cmd.SetArchiveInfoRsp, msg.PacketId, rsp)
+	s.GetArchive().SetArchiveMap(req.Key, req.Value)
 }

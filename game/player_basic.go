@@ -22,36 +22,39 @@ func (g *Game) PlayerLogin(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 		ReconnectSuccess: req.IsReconnect, // 重新连接是否成功
 	}
 	// 重复登录检查
-	if player := g.GetUser(userId); player != nil {
+	s := g.GetUser(userId)
+	if s != nil {
+		s.Conn = conn
 		g.kickPlayer(userId) // 下线老玩家
-	}
-	// 拉取数据
-	dbUser, err := db.GetOFGameByUserId(userId)
-	if err != nil {
-		rsp.Status = proto.StatusCode_StatusCode_PLAYER_NOT_FOUND
-		log.Game.Warnf("数据库拉取玩家:%v数据失败:%s", userId, err.Error())
-		return
-	}
-	s := &model.Player{
-		UserId:    userId,
-		Conn:      conn,
-		Online:    true,
-		NetFreeze: false,
-		Created:   dbUser.CreatedAt,
-		Updated:   dbUser.UpdatedAt,
-	}
-	if dbUser.BinData != nil {
-		if err := json.Unmarshal(dbUser.BinData, s); err != nil {
+	} else {
+		// 拉取数据
+		dbUser, err := db.GetOFGameByUserId(userId)
+		if err != nil {
 			rsp.Status = proto.StatusCode_StatusCode_PLAYER_NOT_FOUND
-			log.Game.Warnf("玩家:%v数据序列化失败:%s", userId, err.Error())
+			log.Game.Warnf("数据库拉取玩家:%v数据失败:%s", userId, err.Error())
 			return
 		}
-	} else {
-		// newPlayer
-		s.GetCharacterModel().AllCharacterModel()
-		s.GetItemModel().AllItemModel()
+		s = &model.Player{
+			UserId:    userId,
+			Conn:      conn,
+			Online:    true,
+			NetFreeze: false,
+			Created:   dbUser.CreatedAt,
+			Updated:   dbUser.UpdatedAt,
+		}
+		if dbUser.BinData != nil {
+			if err := json.Unmarshal(dbUser.BinData, s); err != nil {
+				rsp.Status = proto.StatusCode_StatusCode_PLAYER_NOT_FOUND
+				log.Game.Warnf("玩家:%v数据序列化失败:%s", userId, err.Error())
+				return
+			}
+		} else {
+			// newPlayer
+			s.GetCharacterModel().AllCharacterModel()
+			s.GetItemModel().AllItemModel()
+		}
+		g.userMap[userId] = s
 	}
-	g.userMap[userId] = s
 
 	basic := s.GetBasicModel()
 	if basic == nil {

@@ -1,6 +1,8 @@
 package model
 
 import (
+	"gucooing/lolo/gdconf"
+	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/protocol/proto"
 )
 
@@ -12,31 +14,37 @@ func (s *Player) GetQuestDetail() *proto.QuestDetail {
 		RandomQuestBonusLeft:    nil,
 		Quests:                  make([]*proto.Quest, 0),
 	}
-	// for _, v := range gdconf.GetAllQuest().GetQuest().GetDatas() {
-	// 	quest := &proto.Quest{
-	// 		QuestId:       uint32(v.ID),
-	// 		Conditions:    make([]*proto.Condition, 0),
-	// 		Status:        proto.QuestStatus_QuestStatus_InProgress,
-	// 		CompleteCount: 1,
-	// 		BonusTimes:    1,
-	// 		ActivityId:    0,
-	// 	}
-	// 	for _, v2 := range gdconf.GetAllQuest().GetConditionSetGroup().GetDatas() {
-	// 		if v2.ID == v.ID {
-	// 			for _, set := range v2.QuestConditionSet {
-	// 				for _, conditionId := range set.GetAchieveConditionID() {
-	// 					alg.AddList(&quest.Conditions, &proto.Condition{
-	// 						ConditionId: uint32(conditionId),
-	// 						Progress:    1,
-	// 						Status:      proto.QuestStatus_QuestStatus_InProgress,
-	// 					})
-	// 				}
-	// 			}
-	// 			break
-	// 		}
-	// 	}
-	// 	alg.AddList(&info.Quests, quest)
-	// }
+	for chapterId, chapterInfo := range gdconf.GetStoryChapters() {
+		chapter := &proto.Chapter{
+			ChapterId:        chapterId,
+			RewardedStoryIds: make([]uint32, 0),
+		}
+		for StoryId, _ := range chapterInfo.StoryList {
+			chapter.RewardedStoryIds = append(chapter.RewardedStoryIds, StoryId)
+		}
+		alg.AddList(&info.Chapters, chapter)
+	}
+	for questId, questInfo := range gdconf.GetQuestInfos() {
+		quest := &proto.Quest{
+			QuestId:       questId,
+			Conditions:    make([]*proto.Condition, 0),
+			Status:        proto.QuestStatus_QuestStatus_Finish,
+			CompleteCount: 1,
+			BonusTimes:    1,
+			ActivityId:    0,
+		}
+		for _, set := range questInfo.ConditionSetGroup.QuestConditionSet {
+			for _, achieveConditionID := range set.AchieveConditionID {
+				alg.AddList(&quest.Conditions, &proto.Condition{
+					ConditionId: uint32(achieveConditionID),
+					Progress:    1,
+					Status:      proto.QuestStatus_QuestStatus_Finish,
+				})
+			}
+		}
+		alg.AddList(&info.Quests, quest)
+	}
+
 	return info
 }
 

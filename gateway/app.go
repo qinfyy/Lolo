@@ -1,6 +1,8 @@
 package gateway
 
 import (
+	"errors"
+	"io"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +22,7 @@ type Gateway struct {
 	router       *gin.Engine     // http 服务器
 	loginChan    chan *LoginInfo // 登录通道
 	delLoginChan chan string     // 撤销登录通道 sdk uid ->
+	doneChan     chan struct{}   // 停止
 	game         *game.Game
 }
 
@@ -31,6 +34,7 @@ func NewGateway(router *gin.Engine) *Gateway {
 		router:       router,
 		loginChan:    make(chan *LoginInfo, 1000),
 		delLoginChan: make(chan string, 1000),
+		doneChan:     make(chan struct{}),
 		game:         game.NewGame(),
 	}
 	g.net, err = ofnet.NewNet("tcp", g.cfg.GetOuterAddr())
@@ -53,6 +57,12 @@ func NewGateway(router *gin.Engine) *Gateway {
 
 func (g *Gateway) RunGateway() error {
 	for {
+		select {
+		case <-g.doneChan:
+			log.Gate.Infof("gate主线程停止")
+			return nil
+		default:
+		}
 		conn, err := g.net.Accept()
 		if err != nil {
 			return err
@@ -104,6 +114,33 @@ ty:
 	}
 }
 
-func (g *Gateway) Close() {
+func (g *Gateway) receive(conn ofnet.Conn, userId uint32) {
+	for {
+		select {
+		case <-g.doneChan:
+			return
+		default:
+			msg, err := conn.Read()
+			switch {
+			case err == nil:
+				g.game.GetGameMsgChan() <- &game.GameMsg{
+					UserId:  userId,
+					Conn:    conn,
+					GameMsg: msg,
+				}
+			case errors.Is(err, io.EOF),
+				errors.Is(err, io.ErrClosedPipe):
+				return
+			default:
+				log.Gate.Errorf("%s", err)
+				return
+			}
+		}
+	}
+}
 
+func (g *Gateway) Close() {
+	close(g.doneChan)
+	g.game.Close()
+	log.Gate.Infof("gate退出完成")
 }
