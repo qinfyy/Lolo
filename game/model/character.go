@@ -42,6 +42,7 @@ type CharacterInfo struct {
 	CharacterId               uint32                      `json:"characterId,omitempty"`               // 角色id
 	Level                     uint32                      `json:"level,omitempty"`                     // 角色等级
 	Exp                       uint32                      `json:"exp,omitempty"`                       // 角色经验
+	BreakLevel                uint32                      `json:"breakLevel,omitempty"`                // 突破等级
 	Star                      uint32                      `json:"star,omitempty"`                      // 角色星级
 	CharacterAppearance       *CharacterAppearance        `json:"characterAppearance,omitempty"`       // 角色外貌
 	CharacterSkillList        map[uint32]*CharacterSkill  `json:"characterSkillList,omitempty"`        // 角色技能
@@ -55,6 +56,7 @@ func newCharacterInfo(characterId uint32) *CharacterInfo {
 	info := &CharacterInfo{
 		CharacterId:               characterId,
 		Level:                     1,
+		BreakLevel:                0,
 		Exp:                       0,
 		Star:                      0,
 		CharacterAppearance:       newCharacterAppearance(characterId),
@@ -136,11 +138,21 @@ func (c *CharacterModel) GetAllPbCharacter() []*proto.Character {
 	return list
 }
 
+func (c *CharacterInfo) MaxLevel() uint32 {
+	conf := gdconf.GetCharacterAll(c.CharacterId)
+	if c.BreakLevel < 1 ||
+		len(conf.LevelRules) < int(c.BreakLevel) {
+		return 20
+	}
+	levelRule := conf.LevelRules[c.BreakLevel-1]
+	return uint32(levelRule.GetTopMaxLevel())
+}
+
 func (c *CharacterInfo) Character() *proto.Character {
 	pbInfo := &proto.Character{
 		CharacterId:               c.CharacterId,
 		Level:                     c.Level,
-		MaxLevel:                  0,
+		MaxLevel:                  c.MaxLevel(),
 		Exp:                       c.Exp,
 		Star:                      c.Star,
 		EquipmentPresets:          c.GetPbEquipmentPresets(),
@@ -150,9 +162,9 @@ func (c *CharacterInfo) Character() *proto.Character {
 		GatherWeapon:              0,
 		CharacterAppearance:       c.GetPbCharacterAppearance(),
 		CharacterSkillList:        c.GetPbCharacterSkillList(),
-		RewardedAchievementIdLst:  nil,
+		RewardedAchievementIdLst:  make([]uint32, 0),
 		IsUnlockPayment:           false,
-		RewardIndexLst:            nil,
+		RewardIndexLst:            make([]uint32, 0),
 		MpGameWeapon:              0,
 	}
 

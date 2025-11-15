@@ -12,6 +12,7 @@ type Character struct {
 type CharacterAllInfo struct {
 	CharacterId   uint32
 	CharacterInfo *excel.CharacterConfigure
+	LevelRules    []*excel.CharacterLevelRuleInfo
 }
 
 func (g *GameConfig) loadCharacter() {
@@ -34,6 +35,9 @@ func (g *GameConfig) loadCharacter() {
 
 	for _, v := range info.all.GetCharacter().GetDatas() {
 		getCharacterAllMap(v.ID).CharacterInfo = v
+	}
+	for _, v := range info.all.GetLevelRule().GetDatas() {
+		getCharacterAllMap(v.ID).LevelRules = v.LevelRuleInfo
 	}
 }
 

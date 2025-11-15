@@ -347,6 +347,7 @@ func (s *ScenePlayer) GetPbSceneCharacter(characterId uint32) (info *proto.Scene
 		Rot:                 s.Rot,
 		CharId:              characterInfo.CharacterId,
 		CharLv:              characterInfo.Level,
+		CharBreakLv:         characterInfo.BreakLevel,
 		CharStar:            characterInfo.Star,
 		CharacterAppearance: characterInfo.GetPbCharacterAppearance(),
 		OutfitPreset:        s.GetPbSceneCharacterOutfitPreset(characterInfo),
@@ -357,7 +358,6 @@ func (s *ScenePlayer) GetPbSceneCharacter(characterId uint32) (info *proto.Scene
 
 		GatherWeapon:  0,
 		IsDead:        false,
-		CharBreakLv:   0,
 		InscriptionId: 0,
 		InscriptionLv: 0,
 		MpGameWeapon:  0,
