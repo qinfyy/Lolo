@@ -68,8 +68,6 @@ func (i *ItemModel) AllItemModel() {
 			proto.EBagItemTag_EBagItemTag_StrengthStone,
 			proto.EBagItemTag_EBagItemTag_ExpBook,
 			proto.EBagItemTag_EBagItemTag_Head,
-			proto.EBagItemTag_EBagItemTag_UnlockItem,
-			proto.EBagItemTag_EBagItemTag_AbilityItem,
 			proto.EBagItemTag_EBagItemTag_UnlockAbilityItem,
 			proto.EBagItemTag_EBagItemTag_CharacterBadge,
 			proto.EBagItemTag_EBagItemTag_DyeStuff,
@@ -104,6 +102,20 @@ func (i *ItemModel) AllItemModel() {
 		case proto.EBagItemTag_EBagItemTag_Currency:
 			for _, conf := range confList {
 				i.AddItemBase(uint32(conf.ID), 99999999)
+			}
+		case proto.EBagItemTag_EBagItemTag_UnlockItem:
+			for _, conf := range confList {
+				if gdconf.GetPlayerUnlockConfigure(conf.ID) == nil {
+					continue
+				}
+				i.AddItemBase(uint32(conf.ID), 1)
+			}
+		case proto.EBagItemTag_EBagItemTag_AbilityItem:
+			for _, conf := range confList {
+				if gdconf.GetPlayerAbilityConfigure(conf.ID) == nil {
+					continue
+				}
+				i.AddItemBase(uint32(conf.ID), 1)
 			}
 		case proto.EBagItemTag_EBagItemTag_Weapon:
 			for _, conf := range confList {

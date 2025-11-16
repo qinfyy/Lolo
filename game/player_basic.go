@@ -171,6 +171,13 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 		rsp.QuestDetail = s.GetQuestDetail()
 		rsp.QuestionnaireInfo = s.GetPlayerQuestionnaireInfo()
 		rsp.UnlockFunctions = s.GetUnlockFunctions()
+		rsp.PlacedCharacters = make([]uint32, 0)
+		rsp.FurnitureItemInfo = make([]*proto.BaseItem, 0)
+		rsp.DailyTask = &proto.PlayerDailyTask{
+			Tasks:             make(map[uint32]uint32),
+			TodayConverted:    0,
+			ExchangeTimesLeft: 0,
+		}
 	}
 }
 

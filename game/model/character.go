@@ -92,7 +92,8 @@ func (s *Player) AddCharacter(characterId uint32) bool {
 		return false
 	}
 	conf := gdconf.GetCharacterAll(characterId)
-	if conf == nil {
+	if conf == nil ||
+		!conf.CharacterInfo.IsShow {
 		log.Game.Warnf("尝试添加不存在的角色:%v", characterId)
 		return false
 	}
@@ -295,9 +296,6 @@ func newEquipmentPreset(presetIndex uint32) *EquipmentPreset {
 		WeaponInstanceId: 0,
 		Armors:           make(map[proto.EEquipType]*ArmorInfo),
 		Posters:          make(map[proto.PosterInfo_PosterIndex]*PosterInfo),
-	}
-	if presetIndex != 0 { // kfkj 666 抽象
-		return info
 	}
 	// 添加盔甲
 	for _, tag := range proto.EEquipType_value {

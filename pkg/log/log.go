@@ -29,6 +29,9 @@ func Close() {
 	if Game != nil {
 		Game.Close()
 	}
+	if ClientLog != nil {
+		ClientLog.Close()
+	}
 }
 
 func NewApp() {

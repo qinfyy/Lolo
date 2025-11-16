@@ -5,18 +5,27 @@ import (
 )
 
 type PlayerUnlock struct {
-	all *excel.AllPlayerUnlockDatas
+	all             *excel.AllPlayerUnlockDatas
+	PlayerUnlockMap map[int32]*excel.PlayerUnlockConfigure
 }
 
 func (g *GameConfig) loadPlayerUnlock() {
 	info := &PlayerUnlock{
-		all: new(excel.AllPlayerUnlockDatas),
+		all:             new(excel.AllPlayerUnlockDatas),
+		PlayerUnlockMap: make(map[int32]*excel.PlayerUnlockConfigure),
 	}
 	g.Excel.PlayerUnlock = info
 	name := "PlayerUnlock.json"
 	ReadJson(g.excelPath, name, &info.all)
+	for _, v := range info.all.GetPlayerUnlock().GetDatas() {
+		info.PlayerUnlockMap[v.ID] = v
+	}
 }
 
-func GetAllPlayerUnlock() *excel.AllPlayerUnlockDatas {
-	return cc.Excel.PlayerUnlock.all
+func GetPlayerUnlockMap() map[int32]*excel.PlayerUnlockConfigure {
+	return cc.Excel.PlayerUnlock.PlayerUnlockMap
+}
+
+func GetPlayerUnlockConfigure(id int32) *excel.PlayerUnlockConfigure {
+	return cc.Excel.PlayerUnlock.PlayerUnlockMap[id]
 }

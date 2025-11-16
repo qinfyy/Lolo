@@ -79,6 +79,7 @@ func (g *GameConfig) load() {
 	g.loadGacha()
 	g.loadQuest()
 	g.loadPlayerUnlock()
+	g.loadPlayerAbility()
 	g.loadStory()
 	g.loadFashion()
 	g.loadArmor()
@@ -96,19 +97,20 @@ type Data struct {
 }
 
 type Excel struct {
-	Head         *Head
-	Character    *Character
-	Item         *Item
-	Weapon       *Weapon
-	Gacha        *Gacha
-	Quest        *Quest
-	PlayerUnlock *PlayerUnlock
-	Story        *Story
-	Fashion      *Fashion
-	Armor        *Armor
-	Poster       *Poster
-	Inscription  *Inscription
-	GlobalConfig *GlobalConfig
+	Head          *Head
+	Character     *Character
+	Item          *Item
+	Weapon        *Weapon
+	Gacha         *Gacha
+	Quest         *Quest
+	PlayerUnlock  *PlayerUnlock
+	PlayerAbility *PlayerAbility
+	Story         *Story
+	Fashion       *Fashion
+	Armor         *Armor
+	Poster        *Poster
+	Inscription   *Inscription
+	GlobalConfig  *GlobalConfig
 }
 
 type Config struct {

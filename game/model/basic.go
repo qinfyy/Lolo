@@ -48,7 +48,7 @@ func (s *Player) GetPbPlayerDropRateInfo() *proto.PlayerDropRateInfo {
 
 func (s *Player) GetUnlockFunctions() []uint32 {
 	list := make([]uint32, 0)
-	for _, v := range gdconf.GetAllPlayerUnlock().GetPlayerUnlock().GetDatas() {
+	for _, v := range gdconf.GetPlayerUnlockMap() {
 		list = append(list, uint32(v.ID))
 	}
 	return list
