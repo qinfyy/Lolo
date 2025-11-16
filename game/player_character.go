@@ -2,7 +2,9 @@ package game
 
 import (
 	"gucooing/lolo/game/model"
+	"gucooing/lolo/gdconf"
 	"gucooing/lolo/pkg/alg"
+	"gucooing/lolo/pkg/constant"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/protocol/cmd"
 	"gucooing/lolo/protocol/proto"
@@ -27,6 +29,65 @@ func (g *Game) GetCharacterAchievementList(s *model.Player, msg *alg.GameMsg) {
 		RewardedIdLst:           make([]uint32, 0),
 	}
 	defer g.send(s, cmd.GetCharacterAchievementListRsp, msg.PacketId, rsp)
+}
+
+func (g *Game) CharacterLevelUp(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.CharacterLevelUpReq)
+	rsp := &proto.CharacterLevelUpRsp{
+		Status: proto.StatusCode_StatusCode_OK,
+		CharId: req.CharId,
+		Level:  0,
+		Exp:    0,
+	}
+	defer g.send(s, cmd.CharacterLevelUpRsp, msg.PacketId, rsp)
+	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharId)
+	if characterInfo == nil {
+		rsp.Status = proto.StatusCode_StatusCode_CHARACTER_PLACED
+		log.Game.Warnf("保存角色升级失败,角色%v不存在", req.CharId)
+		return
+	}
+	// 申请事务
+	tx, err := s.GetItemModel().Begin()
+	if err != nil {
+		rsp.Status = proto.StatusCode_StatusCode_ITEM_NOT_ENOUGH
+		log.Game.Errorf("玩家:%v申请背包事务失败:%s", s.UserId, err.Error())
+		return
+	}
+	// 物品消耗
+	itemList := gdconf.GetGlobalConfigConfigure(constant.CharacterLevelUpNeedItem)
+	itemExp := uint32(0)
+	for index, num := range req.Nums {
+		itemId := alg.S2U32(itemList.Values[index])
+		if tx.DelBaseItem(itemId, num).Error != nil {
+			tx.Rollback()
+			rsp.Status = proto.StatusCode_StatusCode_EXPLORE_NUM_LIMIT
+			log.Game.Errorf("玩家:%v扣除背包物品失败:%s", s.UserId, tx.Error.Error())
+			return
+		}
+		itemExp += constant.ItemAddExp[itemId] * uint32(num)
+	}
+	level, exp := gdconf.AddCharacterExp(
+		gdconf.GetCharacterAll(characterInfo.CharacterId).CharacterInfo.GetGrowthLevelID(),
+		int32(characterInfo.Exp+itemExp),
+		characterInfo.Level,
+		characterInfo.MaxLevel,
+	)
+	if tx.DelBaseItem(constant.CurrencyGold, int64(itemExp/50)).Error != nil {
+		tx.Rollback()
+		rsp.Status = proto.StatusCode_StatusCode_EXPLORE_NUM_LIMIT
+		log.Game.Errorf("玩家:%v扣除金币失败:%s", s.UserId, tx.Error.Error())
+		return
+	}
+	// 给予经验
+	characterInfo.Level = level
+	characterInfo.Exp = exp
+
+	// 提交事务
+	tx.Commit()
+	g.send(s, cmd.PackNotice, 0, tx.PackNotice)
+
+	rsp.Level = characterInfo.Level
+	rsp.Exp = characterInfo.Exp
 }
 
 func (g *Game) OutfitPresetUpdate(s *model.Player, msg *alg.GameMsg) {

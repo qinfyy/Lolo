@@ -1,6 +1,11 @@
 package model
 
 import (
+	"errors"
+	"fmt"
+	"sync"
+	"time"
+
 	"gucooing/lolo/gdconf"
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
@@ -8,6 +13,7 @@ import (
 )
 
 type ItemModel struct {
+	transactionLock    sync.Mutex                      `json:"-"`                        // 事务锁
 	InstanceIndex      uint32                          `json:"instanceIndex,omitempty"`  // 物品索引生成器
 	ItemBaseInfo       map[uint32]*ItemBaseInfo        `json:"itemBaseInfo,omitempty"`   // 基础物品 徽章 伞
 	ItemWeaponMap      map[uint32]*ItemWeaponInfo      `json:"itemWeaponMap,omitempty"`  // 武器
@@ -138,6 +144,15 @@ func (i *ItemModel) GetItemBaseMap() map[uint32]*ItemBaseInfo {
 		i.ItemBaseInfo = make(map[uint32]*ItemBaseInfo)
 	}
 	return i.ItemBaseInfo
+}
+
+func (i *ItemModel) GetItemBaseInfo(itemId uint32) *ItemBaseInfo {
+	list := i.GetItemBaseMap()
+	info, ok := list[itemId]
+	if !ok {
+		return nil
+	}
+	return info
 }
 
 func (i *ItemModel) AddItemBase(itemId uint32, num int64) {
@@ -759,4 +774,70 @@ func (i *ItemInscriptionInfo) GetPbInscription() *proto.Inscription {
 		WeaponInstanceId: i.WeaponInstanceId,
 	}
 	return info
+}
+
+// 背包事务
+type ItemTransaction struct {
+	Error      error
+	close      bool
+	i          *ItemModel
+	baseItem   map[uint32]int64
+	PackNotice *proto.PackNotice
+}
+
+// 创建新的事务
+func (i *ItemModel) Begin() (*ItemTransaction, error) {
+	timer := time.NewTimer(time.Second * 1)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil, errors.New("事务锁获取超时")
+	default:
+		i.transactionLock.Lock()
+		t := &ItemTransaction{
+			i:        i,
+			baseItem: make(map[uint32]int64),
+		}
+		return t, nil
+	}
+}
+
+// 提交事务
+func (t *ItemTransaction) Commit() (tx *ItemTransaction) {
+	defer func() {
+		if !t.close {
+			t.close = true
+			t.i.transactionLock.Unlock()
+		}
+	}()
+	t.PackNotice = &proto.PackNotice{
+		Status: proto.StatusCode_StatusCode_OK,
+		Items:  make([]*proto.ItemDetail, 0),
+	}
+	for id, num := range t.baseItem {
+		info := t.i.GetItemBaseInfo(id)
+		info.Num -= num
+		alg.AddList(&t.PackNotice.Items, info.ItemDetail())
+	}
+	return t
+}
+
+// 撤销事务
+func (t *ItemTransaction) Rollback() {
+	defer func() {
+		if !t.close {
+			t.close = true
+			t.i.transactionLock.Unlock()
+		}
+	}()
+}
+
+func (t *ItemTransaction) DelBaseItem(id uint32, num int64) (tx *ItemTransaction) {
+	t.baseItem[id] += num
+	info := t.i.GetItemBaseInfo(id)
+	if info == nil || info.Num < t.baseItem[id] {
+		t.Error = fmt.Errorf("扣除物品:%v数量:%v 失败,原因:物品数量不足", id, num)
+		return t
+	}
+	return t
 }

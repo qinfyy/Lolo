@@ -2,6 +2,7 @@ package game
 
 import (
 	"runtime"
+	"runtime/debug"
 	"time"
 
 	pb "google.golang.org/protobuf/proto"
@@ -57,7 +58,8 @@ func (g *Game) gameMainLoop() {
 		runtime.UnlockOSThread()
 		if err := recover(); err != nil {
 			log.Game.Error("!!! GAME MAIN LOOP PANIC !!!")
-			log.Game.Error("error: %v", err)
+			log.Game.Errorf("error: %s", err)
+			log.Game.Errorf("Stack trace: %s", string(debug.Stack()))
 		}
 	}()
 	for {
@@ -114,6 +116,7 @@ func (g *Game) kickPlayer(userId uint32) {
 	}
 	// 退出世界
 	g.getWordInfo().killScenePlayer(player)
+	log.Game.Debugf("玩家:%v 离线", userId)
 }
 
 func (g *Game) GetGameMsgChan() chan *GameMsg {
