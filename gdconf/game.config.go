@@ -43,7 +43,7 @@ func LoadGameConfig() *GameConfig {
 func (g *GameConfig) load() {
 	// 验证文件夹是否存在
 	if dirInfo, err := os.Stat(g.dataPath); err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("找不到文件夹:%s,err:%s", g.dataPath, err)
+		info := fmt.Sprintf("找不到文件夹:%s 请检查config.Resources.DataPath 配置,err:%s", g.dataPath, err)
 		panic(info)
 	}
 	g.dataPath += "/"
@@ -52,7 +52,7 @@ func (g *GameConfig) load() {
 	// 验证文件夹是否存在
 	g.excelPath = g.baseResPath + "/Excel"
 	if dirInfo, err := os.Stat(g.excelPath); err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("找不到文件夹:%s,err:%s", g.excelPath, err)
+		info := fmt.Sprintf("找不到文件夹:%s 请检查config.Resources.ResourcePath 配置,err:%s", g.excelPath, err)
 		panic(info)
 	}
 	g.excelPath += "/"
@@ -61,7 +61,7 @@ func (g *GameConfig) load() {
 	// 验证文件夹是否存在
 	g.configPath = g.baseResPath + "/Config"
 	if dirInfo, err := os.Stat(g.configPath); err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("找不到文件夹:%s,err:%s", g.configPath, err)
+		info := fmt.Sprintf("找不到文件夹:%s 请检查config.Resources.ResourcePath 配置,err:%s", g.configPath, err)
 		panic(info)
 	}
 	g.configPath += "/"

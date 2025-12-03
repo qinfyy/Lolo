@@ -1,5 +1,5 @@
 # lolo
-开放空间-箱庭游戏服务端部分实现
+开放空间/OverField 服务端部分实现
 
 支持的客户端版本:cn-最新(ios/windows/android/是cn客户端都支持)
 

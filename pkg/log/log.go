@@ -78,7 +78,12 @@ func addHandler(l *slog.SugaredLogger, conf *config.Log) {
 			WithLogfile(fmt.Sprintf("./log/%s.log", conf.AppName)).
 			WithLogLevels(slog.AllLevels).
 			WithBuffSize(1024 * 10).
-			WithRotateTime(rotatefile.Every30Min).
+			WithRotateTime(func() rotatefile.RotateTime {
+				if config.GetMode() == config.ModeDev {
+					return rotatefile.EverySecond
+				}
+				return rotatefile.Every15Min
+			}()).
 			WithCompress(true).
 			Build())
 	}
@@ -97,11 +102,11 @@ func GinLog(l *slog.SugaredLogger) gin.HandlerFunc {
 			path = path + "?" + raw
 		}
 
-		l.Debugf("HTTP [%s %s]|%3d||%13v|%15s|",
+		l.Debugf("HTTP [%s][Code:%3d][%11s][Ping:%7v][Path:%s]",
 			c.Request.Method,
-			path,
 			c.Writer.Status(),
+			c.ClientIP(),
 			latency,
-			c.ClientIP())
+			path)
 	}
 }
