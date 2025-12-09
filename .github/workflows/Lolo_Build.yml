@@ -33,14 +33,19 @@ jobs:
         with:
           name: data.zip
           path: ./data/*
+      - name: Package
+        run: |
+          mkdir bin
+          zip -r ./data/data.zip ./data/*
       - name: Release
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' }}
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.TOKEN }}
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ github.event.inputs.tag }}
           files: |
-            Lolo_*
+            ./data/data.zip
 
   build:
     needs:
