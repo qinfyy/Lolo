@@ -78,7 +78,9 @@ func GetAllChatPrivateMsg(userId1, userId2 uint32) ([]*OFChatPrivateMsg, error) 
 				return err
 			}
 		}
-		err = tx.Where("private_id = ?", private.ID).Find(&list).Error
+		err = tx.Where("private_id = ?", private.ID).
+			Limit(100).
+			Find(&list).Error
 		return err
 	})
 
