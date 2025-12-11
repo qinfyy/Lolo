@@ -127,5 +127,12 @@ func (g *Game) ChatPrivateMsgNotice(s *model.Player, msg *db.OFChatPrivateMsg) {
 		Type:   proto.ChatChannelType_ChatChannel_Private,
 		Msg:    model.GetUserChatMsgData(msg.OFChatMsg, msg.UserId),
 	}
-	defer g.send(s, 0, notice)
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return
+	default:
+		g.send(s, 0, notice)
+	}
 }
