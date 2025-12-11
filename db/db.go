@@ -45,6 +45,7 @@ func NewDB() error {
 		&OFFriend{},
 		&OFFriendBlack{},
 		&OFChatPrivate{},
+		&OFChatPrivateMsg{},
 	)
 
 	db.Create(&OFUser{

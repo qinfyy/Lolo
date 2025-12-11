@@ -86,6 +86,7 @@ func (g *GameConfig) load() {
 	g.loadPoster()
 	g.loadInscription()
 	g.loadGlobalConfig()
+	g.loadChat()
 
 	// config
 	g.loadSceneConfig()
@@ -111,6 +112,7 @@ type Excel struct {
 	Poster        *Poster
 	Inscription   *Inscription
 	GlobalConfig  *GlobalConfig
+	Chat          *Chat
 }
 
 type Config struct {
