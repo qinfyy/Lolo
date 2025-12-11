@@ -85,9 +85,28 @@ func GetAllChatPrivateMsg(userId1, userId2 uint32) ([]*OFChatPrivateMsg, error) 
 	return list, err
 }
 
-// 写入私聊消息
-func CreateChatPrivateMsg() error {
-
+/*
+写入私聊消息
+UserId 接收方
+Msg 消息内容
+*/
+func CreateChatPrivateMsg(userId uint32, msg *OFChatPrivateMsg) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
+		private, err := GetChatPrivate(msg.UserId, userId)
+		if err != nil {
+			return err
+		}
+		if !private.IsNewMsg {
+			private.IsNewMsg = true
+			if err = tx.Save(private).Error; err != nil {
+				return err
+			}
+		}
+		msg.PrivateID = private.ID
+		err = tx.Create(msg).Error
+		return err
+	})
+	return err
 }
 
 // 系统消息记录表

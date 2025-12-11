@@ -19,7 +19,6 @@ func (g *Game) chatInit(s *model.Player) {
 	/*
 		s.ChangeChatChannel()
 	*/
-	g.ChatMsgRecordInitNotice(s)
 }
 
 type ChatInfo struct {
