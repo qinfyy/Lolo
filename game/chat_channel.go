@@ -1,12 +1,13 @@
 package game
 
 import (
+	"sync"
+
 	"gucooing/lolo/game/model"
 	"gucooing/lolo/gdconf"
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/protocol/proto"
-	"sync"
 )
 
 var (
@@ -213,6 +214,9 @@ func (c *ChatChannel) allSendMsg(msg *proto.ChatMsgData) {
 		Msg:    msg,
 	}
 	for _, s := range c.userMap {
+		if s.UserId == msg.PlayerId {
+			continue
+		}
 		s.Conn.Send(0, notice)
 	}
 }

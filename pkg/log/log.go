@@ -80,9 +80,9 @@ func addHandler(l *slog.SugaredLogger, conf *config.Log) {
 			WithBuffSize(1024 * 10).
 			WithRotateTime(func() rotatefile.RotateTime {
 				if config.GetMode() == config.ModeDev {
-					return rotatefile.EverySecond
+					return rotatefile.Every15Min
 				}
-				return rotatefile.Every15Min
+				return rotatefile.EveryDay
 			}()).
 			WithCompress(true).
 			Build())
