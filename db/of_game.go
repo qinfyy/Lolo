@@ -8,7 +8,7 @@ import (
 )
 
 type OFGame struct {
-	UserId    uint32    `gorm:"primaryKey;not null"`
+	UserId    uint32    `gorm:"primaryKey;not null;index:user_id"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 	BinData   []byte
@@ -61,4 +61,11 @@ func SaveOFGame(userId uint32, fx func(user *OFGame) bool) error {
 	}
 
 	return tx.Commit().Error
+}
+
+// 判断玩家是否存在
+func IsUserExists(userId uint32) bool {
+	var count int64
+	db.Model(&OFGame{}).Where("user_id = ?", userId).Count(&count)
+	return count > 0
 }

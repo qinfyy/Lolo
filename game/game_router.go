@@ -25,6 +25,7 @@ func (g *Game) newRouter() {
 		cmd.ChangeSceneChannelReq:         g.ChangeSceneChannel,         // 切换场景/房间
 		cmd.GenericSceneBReq:              g.GenericSceneB,              // 获取房间中的天气
 		cmd.SceneInterActionPlayStatusReq: g.SceneInterActionPlayStatus, // 同步玩家交互请求
+		cmd.HandingFurnitureReq:           g.HandingFurniture,           // 搬起家具请求
 		// 队伍
 		cmd.UpdateTeamReq: g.UpdateTeam, // 更新队伍
 		// 物品

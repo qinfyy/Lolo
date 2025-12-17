@@ -15,6 +15,10 @@ import (
 	"gucooing/lolo/pkg/ofnet"
 )
 
+var (
+	furnitureSnowflake = alg.NewSnowflakeWorker(1, 1765900800000)
+)
+
 type Game struct {
 	gameMsgChan         chan *GameMsg
 	killUserChan        chan uint32

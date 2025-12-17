@@ -8,7 +8,7 @@ import (
 
 // 好友配置表
 type OFFriendInfo struct {
-	UserId    uint32    `gorm:"primary_key;not null"` // 用户id
+	UserId    uint32    `gorm:"primary_key;not null;index"` // 用户id
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }

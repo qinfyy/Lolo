@@ -20,6 +20,7 @@ var (
 
 type ChannelInfo struct {
 	game             *Game
+	channelType      int                                   // 房间类型
 	SceneInfo        *SceneInfo                            // 所属场景
 	ChannelId        uint32                                // 房间号
 	allPlayer        map[uint32]*ScenePlayer               // 当前房间的全部玩家
@@ -29,6 +30,7 @@ type ChannelInfo struct {
 	sceneSyncDatas   []*proto.SceneSyncData                // 一个tick中待同步的内容
 	sceneServerDatas map[uint32]*proto.ServerSceneSyncData // 一个tick中玩家变动内容
 	chatChannel      *ChatChannel                          // 当前场景的聊天房间
+	sceneGardenData  *model.SceneGardenData                // 花园信息
 	// chan
 	freezeChan           chan struct{}             // 冻结/解冻通道
 	addScenePlayerChan   chan *ScenePlayer         // 玩家进入通道
@@ -39,14 +41,16 @@ type ChannelInfo struct {
 	interActionSyncChan  chan *InterActionCtx      // 玩家交互同步通道
 }
 
-func (s *SceneInfo) newChannelInfo(channelId uint32) *ChannelInfo {
+func (s *SceneInfo) newChannelInfo(channelId uint32, channelType int) *ChannelInfo {
 	info := &ChannelInfo{
 		game:                 s.game,
 		SceneInfo:            s,
 		ChannelId:            channelId,
+		channelType:          channelType,
 		allPlayer:            make(map[uint32]*ScenePlayer),
 		weatherType:          proto.WeatherType_WeatherType_SUNNY,
 		chatChannel:          newChatChannel(),
+		sceneGardenData:      model.GetSceneGardenData(channelId, s.SceneId, channelType),
 		doneChan:             make(chan struct{}),
 		freezeChan:           make(chan struct{}, 1),
 		addScenePlayerChan:   make(chan *ScenePlayer, 10),
@@ -324,33 +328,24 @@ func (c *ChannelInfo) SceneInterActionPlayStatusNotice(ctx *InterActionCtx) {
 
 func (c *ChannelInfo) GetPbSceneData() (info *proto.SceneData) {
 	info = &proto.SceneData{
-		SceneId:        c.SceneInfo.SceneId, // ok
-		GatherLimits:   make([]*proto.GatherLimit, 0),
-		DropItems:      make([]*proto.DropItem, 0),
-		Areas:          make([]*proto.AreaData, 0),
-		Collections:    make([]*proto.CollectionData, 0),
-		Challenges:     make([]*proto.ChallengeData, 0),
-		TreasureBoxes:  make([]*proto.TreasureBoxData, 0),
-		Riddles:        make([]*proto.RiddleData, 0),
-		Monsters:       make([]*proto.MonsterData, 0),
-		EncounterData:  make([]*proto.BattleEncounterData, 0),
-		Flags:          make([]*proto.FlagBattleData, 0),
-		RegionVoices:   make([]uint32, 0),
-		BonFires:       make([]*proto.Bonfire, 0),
-		SoccerPosition: new(proto.SoccerPosition),
-		ChairInfoList:  make([]*proto.ChairInfo, 0),
-		Dungeons:       make([]*proto.DungeonData, 0),
-		FlagIds:        make([]uint32, 0),
-		SceneGardenData: &proto.SceneGardenData{
-			GardenFurnitureInfoMap:      make(map[int64]*proto.FurnitureDetailsInfo),
-			LikesNum:                    0,
-			AccessPlayerNum:             0,
-			LeftLikeNum:                 0,
-			GardenName:                  "",
-			FurniturePlayerMap:          make(map[int64]uint32),
-			OtherPlayerFurnitureInfoMap: make(map[int64]*proto.SceneGardenOtherPlayerData),
-			FurnitureCurrentPointNum:    0,
-		},
+		SceneId:              c.SceneInfo.SceneId, // ok
+		GatherLimits:         make([]*proto.GatherLimit, 0),
+		DropItems:            make([]*proto.DropItem, 0),
+		Areas:                make([]*proto.AreaData, 0),
+		Collections:          make([]*proto.CollectionData, 0),
+		Challenges:           make([]*proto.ChallengeData, 0),
+		TreasureBoxes:        make([]*proto.TreasureBoxData, 0),
+		Riddles:              make([]*proto.RiddleData, 0),
+		Monsters:             make([]*proto.MonsterData, 0),
+		EncounterData:        make([]*proto.BattleEncounterData, 0),
+		Flags:                make([]*proto.FlagBattleData, 0),
+		RegionVoices:         make([]uint32, 0),
+		BonFires:             make([]*proto.Bonfire, 0),
+		SoccerPosition:       new(proto.SoccerPosition),
+		ChairInfoList:        make([]*proto.ChairInfo, 0),
+		Dungeons:             make([]*proto.DungeonData, 0),
+		FlagIds:              make([]uint32, 0),
+		SceneGardenData:      c.sceneGardenData.SceneGardenData(), // ok
 		CurrentGatherGroupId: 0,
 		Players:              make([]*proto.ScenePlayer, 0), // ok
 		ChannelId:            c.ChannelId,                   // ok

@@ -65,6 +65,7 @@ func (g *Game) PlayerLogin(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 					continue
 				}
 			}
+			s.GetItemModel().InitItem()
 			if config.GetMode() == config.ModeDev {
 				s.AllItemModel()
 			}
@@ -98,7 +99,7 @@ func (g *Game) PlayerLogin(conn ofnet.Conn, userId uint32, msg *alg.GameMsg) {
 	// 加入房间
 	scenePlayer := g.getWordInfo().addScenePlayer(s)
 	if scenePlayer == nil {
-		rsp.Status = proto.StatusCode_StatusCode_SCENE_CHANNEL_IS_FULL
+		rsp.Status = proto.StatusCode_StatusCode_SCENE_CHANNEL_NOT_EXIST
 		return
 	}
 	// 场景
@@ -181,7 +182,7 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 		rsp.QuestionnaireInfo = s.GetPlayerQuestionnaireInfo()
 		rsp.UnlockFunctions = s.GetUnlockFunctions()
 		rsp.PlacedCharacters = make([]uint32, 0)
-		rsp.FurnitureItemInfo = make([]*proto.BaseItem, 0)
+		rsp.FurnitureItemInfo = make([]*proto.BaseItem, 0) // 已摆放的家具
 		rsp.DailyTask = &proto.PlayerDailyTask{
 			Tasks:             make(map[uint32]uint32),
 			TodayConverted:    0,

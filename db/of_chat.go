@@ -59,8 +59,8 @@ func GetAllChatPrivate(userId uint32) ([]*OFChatPrivate, error) {
 // 私聊记录表
 type OFChatPrivateMsg struct {
 	ID        int64  `gorm:"primary_key;auto_increment"`
-	PrivateID int64  `gorm:"not null"` // 房间号
-	UserId    uint32 `gorm:"not null"` // 发送用户
+	PrivateID int64  `gorm:"not null;uniqueIndex:user_msg"` // 房间号
+	UserId    uint32 `gorm:"not null;uniqueIndex:user_msg"` // 发送用户
 	*OFChatMsg
 }
 
@@ -113,6 +113,6 @@ func CreateChatPrivateMsg(userId uint32, msg *OFChatPrivateMsg) error {
 
 // 系统消息记录表
 type OFChatSystemMsg struct {
-	ID int64 `gorm:"primary_key;auto_increment"`
+	ID int64 `gorm:"primary_key;auto_increment;index:system_msg_id"`
 	*OFChatMsg
 }

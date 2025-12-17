@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 
+	"gucooing/lolo/db"
 	"gucooing/lolo/game/model"
 	"gucooing/lolo/gdconf"
 	"gucooing/lolo/pkg/log"
@@ -12,8 +13,9 @@ import (
 )
 
 var (
-	minChannelId = uint32(1)
-	maxChannelId = uint32(99999)
+	minChannelId        = uint32(1)
+	maxChannelId        = uint32(99999)
+	privateChannelStart = 1000000
 )
 
 type WordInfo struct {
@@ -107,12 +109,15 @@ func (s *SceneInfo) getSceneChannel(channelId uint32) (*ChannelInfo, error) {
 	}
 	// add SceneChannel
 	if channelId >= minChannelId && channelId <= maxChannelId {
-		info := s.newChannelInfo(channelId)
+		info := s.newChannelInfo(channelId, model.ChannelTypePublic)
 		list[channelId] = info
 		return info, nil
 	}
-	if channelId >= 1000000 {
-		return nil, errors.New("暂未实现私人房间")
+	if channelId >= uint32(privateChannelStart) &&
+		db.IsUserExists(channelId) {
+		info := s.newChannelInfo(channelId, model.ChannelTypePrivate)
+		list[channelId] = info
+		return info, nil
 	}
 	return nil, errors.New("没有该房间")
 }

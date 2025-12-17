@@ -94,7 +94,7 @@ func (g *Game) ChangeSceneChannel(s *model.Player, msg *alg.GameMsg) {
 	if err != nil {
 		scenePlayer.SceneId = oldChannelInfo.SceneInfo.SceneId
 		scenePlayer.ChannelId = oldChannelInfo.ChannelId
-		rsp.Status = proto.StatusCode_StatusCode_PLAYER_NOT_IN_CHANNEL
+		rsp.Status = proto.StatusCode_StatusCode_SCENE_CHANNEL_NOT_EXIST
 		log.Game.Warnf("场景:%v没有目标房间:%v err:%s", req.SceneId, req.ChannelLabel, err)
 		return
 	}
@@ -157,3 +157,5 @@ func (g *Game) SceneInterActionPlayStatus(s *model.Player, msg *alg.GameMsg) {
 		PushType:     req.PushType,
 	}
 }
+
+func (g *Game) HandingFurniture(s *model.Player, msg *alg.GameMsg) {}

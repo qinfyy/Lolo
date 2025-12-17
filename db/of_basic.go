@@ -12,7 +12,7 @@ var (
 )
 
 type OFGameBasic struct {
-	UserId          uint32         `gorm:"primaryKey;not null"`
+	UserId          uint32         `gorm:"primaryKey;not null;index"`
 	NickName        string         `gorm:"default:'gucooing'"`
 	Level           uint32         `gorm:"default:1"`
 	Exp             uint32         `gorm:"default:0"`
