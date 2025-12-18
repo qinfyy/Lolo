@@ -81,28 +81,7 @@ jobs:
         with:
           go-version: "1.25.4"
           check-latest: true
-      - name: Install protoc and protoc-gen-go
-        run: |
-          PROTOC_VERSION=32.0
-          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip
-          sudo unzip protoc-${PROTOC_VERSION}-linux-x86_64.zip -d /usr/local
-          sudo chmod +x /usr/local/bin/protoc
-          rm protoc-${PROTOC_VERSION}-linux-x86_64.zip
 
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          sudo mv $(go env GOPATH)/bin/protoc-gen-go /usr/local/bin/
-
-          protoc --version
-          protoc-gen-go --version
-
-      - name: Build Proto
-        run: |
-          cd ./protocol/proto
-          protoc --proto_path=. --go_out=. *.proto
-          cd ../excel
-          protoc --proto_path=. --go_out=. *.proto
-          cd ../config
-          protoc --proto_path=. --go_out=. *.proto
       - name: Build
         run: |
           TARGET_SPLIT=(${TARGET//-/ })

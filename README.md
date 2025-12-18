@@ -6,6 +6,8 @@
 
 支持的客户端版本:cn-最新(ios/windows/android/是cn客户端都支持)
 
+# 本项目仅供学习与交流,请在下载后的24H内删除,相关版权归 **[四川星期零信息科技有限公司 ©版权所有](https://www.nekotan7.com)**
+
 ## 如何获取
 1. 自编译
 2. 前往[releases](https://github.com/BanterSR/Lolo/releases)或[actions](https://github.com/BanterSR/Lolo/actions)下载最新版
