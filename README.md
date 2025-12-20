@@ -100,3 +100,24 @@ class Handlers {
     }
 };
 ```
+
+## 数据库安装参考
+
+postgres:
+```
+docker run -d \
+  # 容器名称
+  --name postgres \
+  # PostgreSQL 环境变量配置
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_USER=user \
+  # 端口映射：主机5432 -> 容器5432
+  -p 5432:5432 \
+  # 数据卷映射：主机目录 -> 容器目录
+  -v /data/postgres_data:/var/lib/postgresql \
+  # 镜像名称
+  docker.1ms.run/postgres:latest \
+  # PostgreSQL 运行时参数
+  -c shared_buffers=1024MB \
+  -c max_connections=200
+```
