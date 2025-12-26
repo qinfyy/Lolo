@@ -26,6 +26,7 @@ type OFGameBasic struct {
 	Birthday        string         `gorm:"default:''"`
 	IsHideBirthday  bool           `gorm:"default:false"`
 	AvatarFrame     uint32         `gorm:"default:0"`
+	Pendant         uint32         `gorm:"default:0"` // 挂坠
 }
 
 // 获取玩家基础信息

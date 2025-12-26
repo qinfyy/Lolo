@@ -144,10 +144,7 @@ func (g *Game) PlayerMainData(s *model.Player, msg *alg.GameMsg) {
 		rsp.Birthday = basic.Birthday
 		rsp.IsHideBirthday = basic.IsHideBirthday
 		rsp.PhoneBackground = basic.PhoneBackground
-		rsp.Appearance = &proto.PlayerAppearance{
-			AvatarFrame: basic.AvatarFrame,
-			Pendant:     0,
-		}
+		rsp.Appearance = model.GetPlayerAppearance(s.UserId)
 	}
 	// 已获得的角色
 	{
@@ -243,6 +240,24 @@ func (g *Game) UnlockHeadList(s *model.Player, msg *alg.GameMsg) {
 		Heads:  s.GetItemModel().GetHeads(),
 	}
 	defer g.send(s, msg.PacketId, rsp)
+}
+
+func (g *Game) UpdatePlayerAppearance(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.UpdatePlayerAppearanceReq)
+	rsp := &proto.UpdatePlayerAppearanceRsp{
+		Status:     proto.StatusCode_StatusCode_Ok,
+		Appearance: model.GetPlayerAppearance(s.UserId),
+	}
+	defer g.send(s, msg.PacketId, rsp)
+	err := db.UpGameBasic(s.UserId, func(basic *db.OFGameBasic) bool {
+		basic.Pendant = req.Appearance.Pendant
+		basic.AvatarFrame = req.Appearance.AvatarFrame
+		return true
+	})
+	if err != nil {
+		rsp.Status = proto.StatusCode_StatusCode_PlayerNotFound
+		log.Game.Errorf("UserId:%v func db.UpGameBasic err:%v", s.UserId, err)
+	}
 }
 
 func (g *Game) GamePlayReward(s *model.Player, msg *alg.GameMsg) {

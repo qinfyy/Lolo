@@ -324,6 +324,26 @@ func (g *Game) UpdateCharacterAppearance(s *model.Player, msg *alg.GameMsg) {
 		MiningHammerInstanceId:     req.Appearance.MiningHammerInstanceId,
 		CollectionGlovesInstanceId: req.Appearance.CollectionGlovesInstanceId,
 		FishingRodInstanceId:       req.Appearance.FishingRodInstanceId,
+		VehicleInstanceId:          req.Appearance.VehicleInstanceId,
 	}
 	rsp.Appearance = characterInfo.GetPbCharacterAppearance()
+}
+
+func (g *Game) CharacterGatherWeaponUpdate(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.CharacterGatherWeaponUpdateReq)
+	rsp := &proto.CharacterGatherWeaponUpdateRsp{
+		Status: proto.StatusCode_StatusCode_Ok,
+	}
+	defer func() {
+		g.send(s, msg.PacketId, rsp)
+		g.SceneActionCharacterUpdate(
+			s, proto.SceneActionType_SceneActionType_UpdateEquip, req.CharacterId)
+	}()
+	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharacterId)
+	if characterInfo == nil {
+		rsp.Status = proto.StatusCode_StatusCode_PlayerNotInChannel
+		log.Game.Warnf("玩家:%v 角色:%v 不存在", s.UserId, req.CharacterId)
+		return
+	}
+	characterInfo.GatherWeapon = req.WeaponId
 }

@@ -52,6 +52,8 @@ type CharacterInfo struct {
 	EquipmentPresetList       map[uint32]*EquipmentPreset `json:"equipmentPresets,omitempty"`          // 角色装备预设表
 	InUseOutfitPresetIndex    uint32                      `json:"inUseOutfitPresetIndex,omitempty"`    // 当前服装表
 	OutfitPresetList          map[uint32]*OutfitPreset    `json:"outfitPresets,omitempty"`             // 角色服装预设表
+	// 临时数据
+	GatherWeapon uint32 `json:"-"` // 手持道具
 }
 
 func newCharacterInfo(characterId uint32) *CharacterInfo {
@@ -204,6 +206,7 @@ type CharacterAppearance struct {
 	MiningHammerInstanceId     uint32 `json:"miningHammerInstanceId,omitempty"`
 	CollectionGlovesInstanceId uint32 `json:"collectionGlovesInstanceId,omitempty"`
 	FishingRodInstanceId       uint32 `json:"fishingRodInstanceId,omitempty"`
+	VehicleInstanceId          uint32 `json:"vehicleInstanceId,omitempty"` // 车
 }
 
 func newCharacterAppearance(characterId uint32) *CharacterAppearance {
@@ -235,6 +238,7 @@ func (c *CharacterInfo) GetPbCharacterAppearance() *proto.CharacterAppearance {
 		MiningHammerInstanceId:     info.MiningHammerInstanceId,
 		CollectionGlovesInstanceId: info.CollectionGlovesInstanceId,
 		FishingRodInstanceId:       info.FishingRodInstanceId,
+		VehicleInstanceId:          info.VehicleInstanceId,
 	}
 
 	return pbInfo

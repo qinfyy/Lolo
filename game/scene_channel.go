@@ -491,8 +491,8 @@ func (s *ScenePlayer) GetPbSceneCharacter(characterId uint32) (info *proto.Scene
 		WeaponStar:          0,
 		Armors:              make([]*proto.BaseArmor, 0),
 		Posters:             make([]*proto.BasePoster, 0),
+		GatherWeapon:        characterInfo.GatherWeapon,
 
-		GatherWeapon:  0,
 		IsDead:        false,
 		InscriptionId: 0,
 		InscriptionLv: 0,
