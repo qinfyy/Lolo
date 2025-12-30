@@ -78,6 +78,8 @@ func (g *Game) newRouter() {
 		cmd.ChangeChatChannelReq:    g.ChangeChatChannel,    // 切换聊天房间
 		// 星云树
 		cmd.GetCollectMoonInfoReq: g.GetCollectMoonInfo, // 获取星云树信息
+		// 商店
+		cmd.ShopInfoReq: g.ShopInfo, // 获取商店信息
 
 		cmd.PlayerVitalityReq:        g.PlayerVitality,
 		cmd.BossRushInfoReq:          g.BossRushInfo,
@@ -89,7 +91,6 @@ func (g *Game) newRouter() {
 		cmd.ChallengeFriendRankReq:   g.ChallengeFriendRank,
 		cmd.AbilityBadgeListReq:      g.AbilityBadgeList,
 		cmd.SceneProcessListReq:      g.SceneProcessList,
-		cmd.ShopInfoReq:              g.ShopInfo,
 		cmd.WishListByFriendIdReq:    g.WishListByFriendId,
 		cmd.GetLifeInfoReq:           g.GetLifeInfo,
 		cmd.GetMailsReq:              g.GetMails,
