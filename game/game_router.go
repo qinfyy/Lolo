@@ -79,7 +79,9 @@ func (g *Game) newRouter() {
 		// 星云树
 		cmd.GetCollectMoonInfoReq: g.GetCollectMoonInfo, // 获取星云树信息
 		// 商店
-		cmd.ShopInfoReq: g.ShopInfo, // 获取商店信息
+		cmd.ShopInfoReq:       g.ShopInfo,       // 获取商店信息
+		cmd.ShopBuyReq:        g.ShopBuy,        // 商店购买请求
+		cmd.CreatePayOrderReq: g.CreatePayOrder, // 创建支付订单请求
 
 		cmd.PlayerVitalityReq:        g.PlayerVitality,
 		cmd.BossRushInfoReq:          g.BossRushInfo,
