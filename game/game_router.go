@@ -52,9 +52,10 @@ func (g *Game) newRouter() {
 		cmd.GetPosterReq:              g.GetPoster,              // 获取海报列表
 		cmd.PosterIllustrationListReq: g.PosterIllustrationList, // 海报插头列表
 		// 卡池
-		cmd.GachaListReq:   g.GachaList,   // 获取卡池信息
-		cmd.GachaRecordReq: g.GachaRecord, // 获取抽卡记录
-		cmd.GachaReq:       g.Gacha,       // 抽卡，启动！
+		cmd.GachaListReq:          g.GachaList,          // 获取卡池信息
+		cmd.GachaRecordReq:        g.GachaRecord,        // 获取抽卡记录
+		cmd.GachaReq:              g.Gacha,              // 抽卡，启动！
+		cmd.OptionalUpPoolItemReq: g.OptionalUpPoolItem, // 设置保底物品
 		// 角色
 		cmd.GetCharacterAchievementListReq: g.GetCharacterAchievementList, // 获取角色成就情况
 		cmd.CharacterLevelUpReq:            g.CharacterLevelUp,            // 角色升级
