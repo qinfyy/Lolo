@@ -351,28 +351,6 @@ func (g *Game) ManualList(s *model.Player, msg *alg.GameMsg) {
 	defer g.send(s, msg.PacketId, rsp)
 }
 
-func (g *Game) GetCollectMoonInfo(s *model.Player, msg *alg.GameMsg) {
-	req := msg.Body.(*proto.GetCollectMoonInfoReq)
-	rsp := &proto.GetCollectMoonInfoRsp{
-		Status:           proto.StatusCode_StatusCode_Ok,
-		SceneId:          req.SceneId,
-		CollectedMoonIds: make([]uint32, 0),
-		EmotionMoons:     make([]*proto.EmotionMoonInfo, 0),
-	}
-	defer g.send(s, msg.PacketId, rsp)
-}
-
-func (g *Game) ChangeMusicalItem(s *model.Player, msg *alg.GameMsg) {
-	// req := msg.Body.(*proto.ChangeMusicalItemReq)
-	rsp := &proto.ChangeMusicalItemRsp{
-		Status:                proto.StatusCode_StatusCode_Ok,
-		Source:                0,
-		MusicalItemInstanceId: 0,
-		MusicalItemId:         0,
-	}
-	defer g.send(s, msg.PacketId, rsp)
-}
-
 func (g *Game) SelfIntervalInit(s *model.Player, msg *alg.GameMsg) {
 	// req := msg.Body.(*proto.SelfIntervalInitReq)
 	rsp := &proto.SelfIntervalInitRsp{

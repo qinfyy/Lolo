@@ -5,6 +5,7 @@ import (
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/protocol/proto"
+	"time"
 )
 
 func (g *Game) PlayerSceneRecord(s *model.Player, msg *alg.GameMsg) {
@@ -269,6 +270,28 @@ func (g *Game) SceneSitVehicle(s *model.Player, msg *alg.GameMsg) {
 		ChairId:  req.ChairId,
 		SeatId:   req.SeatId,
 		IsSit:    req.IsSit,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+}
+
+func (g *Game) ChangeMusicalItem(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.ChangeMusicalItemReq)
+	rsp := &proto.ChangeMusicalItemRsp{
+		Status:                proto.StatusCode_StatusCode_Ok,
+		Source:                req.Source,
+		MusicalItemInstanceId: req.MusicalItemInstanceId,
+		MusicalItemId:         0,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+}
+
+func (g *Game) PlayMusicNote(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.PlayMusicNoteReq)
+	rsp := &proto.PlayMusicNoteRsp{
+		Status:      proto.StatusCode_StatusCode_Ok,
+		PlayerId:    req.JoinPlayerId,
+		MusicNoteId: req.MusicNoteId,
+		StartTime:   time.Now().Unix(),
 	}
 	defer g.send(s, msg.PacketId, rsp)
 }

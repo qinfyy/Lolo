@@ -32,6 +32,8 @@ func (g *Game) newRouter() {
 		cmd.TakeOutHandingFurnitureReq:    g.TakeOutHandingFurniture,    // 回收家具请求
 		cmd.TakeOutFurnitureReq:           g.TakeOutFurniture,           // 拿起家具请求
 		cmd.SceneSitVehicleReq:            g.SceneSitVehicle,            // 上下车请求
+		cmd.ChangeMusicalItemReq:          g.ChangeMusicalItem,          // 切换音乐源请求
+		cmd.PlayMusicNoteReq:              g.PlayMusicNote,              // 演奏请求
 		// 花园
 		cmd.SwitchGardenStatusReq:           g.SwitchGardenStatus,           // 更新花园设置
 		cmd.GardenLikeRecordReq:             g.GardenLikeRecord,             // 花园点赞记录
@@ -79,10 +81,13 @@ func (g *Game) newRouter() {
 		cmd.ChangeChatChannelReq:    g.ChangeChatChannel,    // 切换聊天房间
 		// 星云树
 		cmd.GetCollectMoonInfoReq: g.GetCollectMoonInfo, // 获取星云树信息
+		cmd.CollectMoonReq:        g.CollectMoon,        // 收集月亮请求
 		// 商店
 		cmd.ShopInfoReq:       g.ShopInfo,       // 获取商店信息
 		cmd.ShopBuyReq:        g.ShopBuy,        // 商店购买请求
 		cmd.CreatePayOrderReq: g.CreatePayOrder, // 创建支付订单请求
+		// 战斗
+		cmd.BattleEncounterInfoReq: g.BattleEncounterInfo, // 获取战斗遭遇信息
 
 		cmd.PlayerVitalityReq:        g.PlayerVitality,
 		cmd.BossRushInfoReq:          g.BossRushInfo,
@@ -103,7 +108,6 @@ func (g *Game) newRouter() {
 		cmd.GenericGameBReq:          g.GenericGameB,
 		cmd.GetCollectItemIdsReq:     g.GetCollectItemIds,
 		cmd.ManualListReq:            g.ManualList,
-		cmd.ChangeMusicalItemReq:     g.ChangeMusicalItem,
 		cmd.PlayerAbilityListReq:     g.PlayerAbilityList,     //
 		cmd.WorldLevelAchieveListReq: g.WorldLevelAchieveList, //
 		cmd.SupplyBoxInfoReq:         g.SupplyBoxInfo,         //

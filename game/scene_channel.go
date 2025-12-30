@@ -474,11 +474,22 @@ func (c *ChannelInfo) GetPbScenePlayer(scenePlayer *ScenePlayer) (info *proto.Sc
 		MusicalItemSource:     0,
 		MusicalItemInstanceId: 0,
 		AbyssRank:             0,
-		PlayingMusicNote:      new(proto.PlayingMusicNote),
+		PlayingMusicNote:      nil,
 		PhoneCase:             0,
 		VehicleItemId:         0,
 	}
+	scenePlayer.UpdateMusicalItem(info) // 赋值音乐物品
 	return
+}
+
+func (s *ScenePlayer) UpdateMusicalItem(info *proto.ScenePlayer) {
+	if info == nil {
+		return
+	}
+	info.MusicalItemId = 0                              // 音乐物品id
+	info.MusicalItemSource = 0                          // 音乐来源
+	info.MusicalItemInstanceId = 0                      // 音乐实例id
+	info.PlayingMusicNote = new(proto.PlayingMusicNote) // 演奏音符
 }
 
 func (c *ChannelInfo) GetPbSceneTeam(scenePlayer *ScenePlayer) (info *proto.SceneTeam) {
