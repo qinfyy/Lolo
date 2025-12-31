@@ -1,11 +1,12 @@
 package game
 
 import (
+	"time"
+
 	"gucooing/lolo/game/model"
 	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/protocol/proto"
-	"time"
 )
 
 func (g *Game) PlayerSceneRecord(s *model.Player, msg *alg.GameMsg) {
@@ -280,18 +281,52 @@ func (g *Game) ChangeMusicalItem(s *model.Player, msg *alg.GameMsg) {
 		Status:                proto.StatusCode_StatusCode_Ok,
 		Source:                req.Source,
 		MusicalItemInstanceId: req.MusicalItemInstanceId,
-		MusicalItemId:         0,
+		MusicalItemId:         uint32(req.MusicalItemInstanceId),
 	}
 	defer g.send(s, msg.PacketId, rsp)
+	scenePlayer := g.getWordInfo().getScenePlayer(s)
+	if scenePlayer == nil ||
+		scenePlayer.channelInfo == nil {
+		rsp.Status = proto.StatusCode_StatusCode_PlayerNotInChannel
+		log.Game.Warnf("玩家:%v没有加入房间", s.UserId)
+		return
+	}
+	scenePlayer.MusicalItemId = uint32(req.MusicalItemInstanceId)
+	scenePlayer.MusicalItemInstanceId = req.MusicalItemInstanceId
+	scenePlayer.MusicalItemSource = req.Source
+	scenePlayer.channelInfo.serverSceneSyncChan <- &ServerSceneSyncCtx{
+		ScenePlayer: scenePlayer,
+		ActionType:  proto.SceneActionType_SceneActionType_UpdateMusicalItem,
+	}
 }
 
 func (g *Game) PlayMusicNote(s *model.Player, msg *alg.GameMsg) {
 	req := msg.Body.(*proto.PlayMusicNoteReq)
 	rsp := &proto.PlayMusicNoteRsp{
 		Status:      proto.StatusCode_StatusCode_Ok,
-		PlayerId:    req.JoinPlayerId,
+		PlayerId:    s.UserId,
 		MusicNoteId: req.MusicNoteId,
-		StartTime:   time.Now().Unix(),
+		StartTime:   time.Now().UnixMilli(),
 	}
 	defer g.send(s, msg.PacketId, rsp)
+	scenePlayer := g.getWordInfo().getScenePlayer(s)
+	if scenePlayer == nil ||
+		scenePlayer.channelInfo == nil {
+		rsp.Status = proto.StatusCode_StatusCode_PlayerNotInChannel
+		log.Game.Warnf("玩家:%v没有加入房间", s.UserId)
+		return
+	}
+	info := &proto.PlayingMusicNote{
+		MusicNoteId: rsp.MusicNoteId,
+		StartTime:   rsp.StartTime,
+	}
+	if req.MusicNoteId != 0 {
+		info.MusicNoteId = req.MusicNoteId
+		info.StartTime = rsp.StartTime
+	}
+	scenePlayer.PlayingMusicNote = info
+	scenePlayer.channelInfo.serverSceneSyncChan <- &ServerSceneSyncCtx{
+		ScenePlayer: scenePlayer,
+		ActionType:  proto.SceneActionType_SceneActionType_UpdateMusicalItem,
+	}
 }
