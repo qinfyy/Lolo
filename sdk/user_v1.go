@@ -15,9 +15,9 @@ const (
 	authXor = 973523452
 )
 
-func getLoginResult(user *db.OFQuick) *quick.LoginResult {
-	result := &quick.LoginResult{
-		ExtInfo:       nil,
+func getLoginResultV1(user *db.OFQuick) *quick.LoginResultV1 {
+	result := &quick.LoginResultV1{
+		ExtInfo:       new(quick.ExtInfo),
 		IsAdult:       true,
 		UAge:          9999,
 		CkPlayTime:    0,
@@ -25,18 +25,18 @@ func getLoginResult(user *db.OFQuick) *quick.LoginResult {
 		Id:            0,
 		Message:       "",
 		AuthToken:     user.AuthToken,
-		UserData:      getUserData(user),
+		UserData:      getUserDataV1(user),
 		CheckRealname: 0,
 	}
 	return result
 }
 
-func getUserData(user *db.OFQuick) *quick.UserData {
-	data := &quick.UserData{
+func getUserDataV1(user *db.OFQuick) *quick.UserDataV1 {
+	data := &quick.UserDataV1{
 		Uid:       strconv.FormatUint(uint64(user.ID), 10),
 		Username:  user.Username,
 		Mobile:    "188****8888",
-		IsGuest:   "",
+		IsGuest:   0,
 		RegDevice: user.RegDevice,
 		SexType:   "",
 		IsMbUser:  1,
@@ -46,7 +46,7 @@ func getUserData(user *db.OFQuick) *quick.UserData {
 	return data
 }
 
-func (s *Server) loginByName(c *gin.Context) {
+func (s *Server) loginByNameV1(c *gin.Context) {
 	req := new(quick.LoginByNameRequest)
 	rsp := quick.NewResponse()
 	defer c.JSON(200, rsp)
@@ -75,10 +75,10 @@ func (s *Server) loginByName(c *gin.Context) {
 		return
 	}
 
-	rsp.SetData(getLoginResult(user))
+	rsp.SetData(getLoginResultV1(user))
 }
 
-func (s *Server) autoLogin(c *gin.Context) {
+func (s *Server) autoLoginV1(c *gin.Context) {
 	req := new(quick.AutoLoginRequest)
 	rsp := quick.NewResponse()
 	defer c.JSON(200, rsp)
@@ -105,5 +105,5 @@ func (s *Server) autoLogin(c *gin.Context) {
 		return
 	}
 
-	rsp.SetData(getLoginResult(user))
+	rsp.SetData(getLoginResultV1(user))
 }

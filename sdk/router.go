@@ -13,35 +13,44 @@ import (
 func (s *Server) Router() {
 	s.router.Any("/", HandleDefault)
 
+	s.router.Any("/Resources/*path", resources)
+
 	dispatch := s.router.Group("/dispatch")
 	{
 		dispatch.POST("/region_info", regionInfo)
+		dispatch.HEAD("/region_info", HandleDefault)
 		dispatch.POST("/client_hot_update", clientHotUpdate)
+		dispatch.GET("/get_client_black_list", getClientBlackList)
 	}
 	s.router.POST("/v3/bind", bindTest)
-	v1 := s.router.Group("/v1", alg.AutoCryptoMiddleware())
+	v1 := s.router.Group("/v1", alg.AutoCryptoMiddlewareV1())
 	{
 		system := v1.Group("/system")
 		{
-			system.POST("/init", systemInit)
+			system.POST("/init", systemInitV1)
 		}
 		user := v1.Group("/user")
 		{
-			user.POST("/loginByName", s.loginByName)
-			user.POST("/autoLogin", s.autoLogin)
+			user.POST("/loginByName", s.loginByNameV1)
+			user.POST("/autoLogin", s.autoLoginV1)
+		}
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/getUserInfo")
+			auth.POST("/asyUonline")
 		}
 	}
 
-	v2 := s.router.Group("/v2", alg.AutoCryptoMiddleware())
+	v2 := s.router.Group("/v2", alg.AutoCryptoMiddlewareV2())
 	{
 		system := v2.Group("/system")
 		{
-			system.POST("/init", systemInit)
+			system.POST("/init", systemInitV2)
 		}
 		user := v2.Group("/user")
 		{
-			user.POST("/loginByName", s.loginByName)
-			user.POST("/autoLogin", s.autoLogin)
+			user.POST("/loginByName", s.loginByNameV2)
+			user.POST("/autoLogin", s.autoLoginV2)
 		}
 	}
 }
@@ -50,12 +59,30 @@ func HandleDefault(c *gin.Context) {
 	c.String(200, "Lolo!")
 }
 
+func resources(c *gin.Context) {
+	path := c.Param("path")
+	url := "http://cdn-of.inutan.com/Resources" + path
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	defer resp.Body.Close()
+	c.DataFromReader(resp.StatusCode, resp.ContentLength,
+		resp.Header.Get("Content-Type"), resp.Body, nil)
+}
+
 type RegionInfoRequest struct {
 	Version         string `form:"version" binding:"required"`
 	Version2        string `form:"version2" binding:"required"`
 	AccountType     string `form:"accountType" binding:"required"`
 	OS              string `form:"os" binding:"required"`
-	LastLoginSDKUID string `form:"lastloginsdkuid" binding:"required"`
+	LastLoginSDKUID string `form:"lastloginsdkuid"`
 }
 
 type RegionInfo struct {
@@ -117,6 +144,7 @@ type GMClientConfig struct {
 }
 
 func clientHotUpdate(c *gin.Context) {
+	// alg.ProxyGin(c, "http://dsp-prod-of.inutan.com:18881/dispatch/client_hot_update")
 	var req RegionInfoRequest
 	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -181,4 +209,19 @@ func bindTest(c *gin.Context) {
 	// } else {
 	// 	fmt.Printf("AES解密结果req: %s\n", string(req))
 	// }
+}
+
+type ClientBlack struct {
+	ID           int    `json:"ID"`
+	MANUFACTURER string `json:"MANUFACTURER"`
+	MODEL        string `json:"MODEL"`
+}
+
+func getClientBlackList(c *gin.Context) {
+	c.JSON(http.StatusOK, []*ClientBlack{
+		{ID: 100, MANUFACTURER: "RETRY_LIMITATION", MODEL: "4"},
+		{ID: 600, MANUFACTURER: "HUAWEI", MODEL: ""},
+		{ID: 1000, MANUFACTURER: "Samsung", MODEL: ""},
+		{ID: 2000, MANUFACTURER: "Sony", MODEL: ""},
+	})
 }

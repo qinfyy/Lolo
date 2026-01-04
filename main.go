@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/contrib/gzip"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gin-contrib/pprof"
-	"github.com/gin-gonic/contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 
@@ -196,7 +196,8 @@ func NewGin() (*gin.Engine, *http.Server) {
 	router.Use(
 		gin.Recovery(),
 		log.GinLog(log.App),
-		gzip.Gzip(gzip.DefaultCompression))
+		gzip.Gzip(gzip.DefaultCompression),
+	)
 	if config.GetMode() == config.ModeDev {
 		pprof.Register(router)
 	}

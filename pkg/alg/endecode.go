@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	log2 "log"
+	"net/http"
 	"sort"
 	"strings"
 
@@ -132,9 +133,9 @@ func PKCS7Padding(data []byte, blockSize int) []byte {
 }
 
 type AutoReq struct {
-	Data string `form:"data" binding:"required"`
-	Sign string `form:"sign" binding:"required"`
-	// ProductCode string `form:"productCode" binding:"required"`
+	Data        string `form:"data" binding:"required"`
+	Sign        string `form:"sign" binding:"required"`
+	ProductCode string `form:"productCode"`
 }
 
 type ResponseWriter struct {
@@ -143,7 +144,40 @@ type ResponseWriter struct {
 	context *gin.Context
 }
 
-func AutoCryptoMiddleware() gin.HandlerFunc {
+func AutoCryptoMiddlewareV1() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		req := new(AutoReq)
+		if err := c.ShouldBind(req); err != nil {
+			c.Abort()
+			return
+		}
+		// 解密
+		reqCiphertext, err := base64.RawStdEncoding.DecodeString(req.Data)
+		if err != nil {
+			c.Abort()
+			return
+		}
+		reqPlainText, err := AESECB128Decode(singKey, reqCiphertext)
+		if err != nil {
+			c.Abort()
+			return
+		}
+		// 签名
+		//if req.Sign != SingBytes(reqPlainText, singKey) {
+		//	c.Abort()
+		//	return
+		//}
+		// debug
+		// log.App.Debugf("auto :%s req:%s", c.Request.URL.Path, string(reqPlainText))
+		// 写入请求
+		c.Set(decryptedData, reqPlainText)
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(reqPlainText))
+		c.Request.ContentLength = int64(len(reqPlainText))
+		c.Next()
+	}
+}
+
+func AutoCryptoMiddlewareV2() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		req := new(AutoReq)
 		if err := c.ShouldBind(req); err != nil {
@@ -233,4 +267,27 @@ func RandStr(length int, id uint32) string {
 	key := make([]byte, length)
 	rand.Read(key)
 	return base64.URLEncoding.EncodeToString(key)
+}
+
+func ProxyGin(c *gin.Context, url string) {
+	request, err := http.NewRequest(c.Request.Method, url, c.Request.Body)
+	if err != nil {
+		return
+	}
+	for k, vs := range c.Request.Header {
+		for _, v := range vs {
+			request.Header.Add(k, v)
+		}
+	}
+	resp, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	body, err = UnGzip(body)
+	if err != nil {
+		return
+	}
+	fmt.Sprintf(string(body))
 }

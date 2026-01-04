@@ -35,7 +35,19 @@ type ExtInfo struct {
 	AccessToken string `json:"access_token"`
 }
 
-type UserData struct {
+type UserDataV1 struct {
+	Uid       string `json:"uid"`
+	Username  string `json:"username"`
+	Mobile    string `json:"mobile"`
+	IsGuest   int    `json:"isGuest"`
+	RegDevice string `json:"regDevice"`
+	SexType   string `json:"sexType"`
+	IsMbUser  int    `json:"isMbUser"`
+	IsSnsUser int    `json:"isSnsUser"`
+	Token     string `json:"token"`
+}
+
+type UserDataV2 struct {
 	Uid       string `json:"uid"`
 	Username  string `json:"username"`
 	Mobile    string `json:"mobile"`
@@ -48,17 +60,49 @@ type UserData struct {
 }
 
 type PtConfig struct {
-	UseSms      string       `json:"useSms"`
-	FcmTips     *FcmTips     `json:"fcmTips"`
-	JoinQQGroup *JoinQQGroup `json:"joinQQGroup"`
-	ServiceInfo string       `json:"serviceInfo"`
-	IsFloat     string       `json:"isFloat"`
-	MainLogin   string       `json:"mainLogin"`
-	UseService  string       `json:"useService"`
+	UseSms            string       `json:"useSms"`
+	FcmTips           *FcmTips     `json:"fcmTips"`
+	JoinQQGroup       *JoinQQGroup `json:"joinQQGroup"`
+	ServiceInfo       string       `json:"serviceInfo"`
+	IsFloat           string       `json:"isFloat"`
+	MainLogin         string       `json:"mainLogin"`
+	UseService        string       `json:"useService"`
+	UseServiceCenter  string       `json:"useServiceCenter"`
+	Logo              string       `json:"logo"`
+	UseBBS            string       `json:"useBBS"`
+	Gift              string       `json:"gift"`
+	IsShowFloat       string       `json:"isShowFloat"`
+	AutoOpenAgreement string       `json:"autoOpenAgreement"`
+	MainLoginType     string       `json:"mainLoginType"`
+	UcentUrl          string       `json:"ucentUrl"`
+	UseCpLogin        string       `json:"useCpLogin"`
+	FloatLogo         string       `json:"floatLogo"`
+	Theme             string       `json:"theme"`
+	UseAppAuth        string       `json:"useAppAuth"`
+	SwitchWxAppPlug   string       `json:"switchWxAppPlug"`
+	IdverifyTipTit    string       `json:"idverifyTipTit"`
+	BanshuSwitch      string       `json:"banshuSwitch"`
+	RmAccountLg       string       `json:"rmAccountLg"`
+	RegVerifyCode     string       `json:"regVerifyCode"`
+	DisFastReg        string       `json:"disFastReg"`
+	NoPassWallet      string       `json:"noPassWallet"`
+	HideMyFunc        *HideMyFunc  `json:"hideMyFunc"`
+	Title             string       `json:"title"`
+	SkinStyle         string       `json:"skinStyle"`
+	RmGuestLg         int          `json:"rmGuestLg"`
+}
+
+type HideMyFunc struct {
+	HideRegBtn          int `json:"hideRegBtn"`
+	CustAdReport        int `json:"custAdReport"`
+	NormalUserBindPhone int `json:"normalUserBindPhone"`
+	EnableEvt           int `json:"enableEvt"`
 }
 
 type FcmTips struct {
 	NoAdultLogoutTip string `json:"noAdultLogoutTip"`
+	GuestLoginTip    string `json:"guestLoginTip"`
+	MinorLoginTip    string `json:"minorLoginTip"`
 	MinorTimeTip     string `json:"minorTimeTip"`
 	AgeLimitTip      string `json:"ageLimitTip"`
 	AgeMaxLimitTip   string `json:"ageMaxLimitTip"`
@@ -66,6 +110,9 @@ type FcmTips struct {
 	ShiMingTip8      string `json:"shiMingTip8"`
 	ShiMingTip816    string `json:"shiMingTip8_16"`
 	ShiMingTip1618   string `json:"shiMingTip16_18"`
+	GuestTimeTip     string `json:"guestTimeTip"`
+	HolidayTimeTip   string `json:"holidayTimeTip"`
+	Less8PayTip      string `json:"less8PayTip"`
 }
 
 type JoinQQGroup struct {

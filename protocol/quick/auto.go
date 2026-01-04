@@ -26,15 +26,28 @@ type AutoLoginRequest struct {
 	Oaid        string `json:"oaid"`
 }
 
-type LoginResult struct {
-	ExtInfo       *ExtInfo  `json:"extInfo"`
-	IsAdult       bool      `json:"isAdult"`
-	UAge          int       `json:"uAge"`
-	CkPlayTime    int       `json:"ckPlayTime"`
-	GuestRealName int       `json:"guestRealName"`
-	Id            int       `json:"id"`
-	Message       string    `json:"message"`
-	AuthToken     string    `json:"auth_token"`
-	UserData      *UserData `json:"user_data"`
-	CheckRealname int       `json:"check_realname"`
+type LoginResultV1 struct {
+	ExtInfo       *ExtInfo    `json:"extInfo"`
+	IsAdult       bool        `json:"isAdult"`
+	UAge          int         `json:"uAge"`
+	CkPlayTime    int         `json:"ckPlayTime"`
+	GuestRealName int         `json:"guestRealName"`
+	Id            int         `json:"id"`
+	Message       string      `json:"message"`
+	AuthToken     string      `json:"authToken"`
+	UserData      *UserDataV1 `json:"userData"`
+	CheckRealname int         `json:"checkRealName"`
+}
+
+type LoginResultV2 struct {
+	ExtInfo       *ExtInfo    `json:"extInfo"`
+	IsAdult       bool        `json:"isAdult"`
+	UAge          int         `json:"uAge"`
+	CkPlayTime    int         `json:"ckPlayTime"`
+	GuestRealName int         `json:"guestRealName"`
+	Id            int         `json:"id"`
+	Message       string      `json:"message"`
+	AuthToken     string      `json:"auth_token"`
+	UserData      *UserDataV2 `json:"user_data"`
+	CheckRealname int         `json:"check_realname"`
 }
