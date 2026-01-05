@@ -195,8 +195,8 @@ func NewGin() (*gin.Engine, *http.Server) {
 	router := gin.New()
 	router.Use(
 		gin.Recovery(),
-		log.GinLog(log.App),
 		gzip.Gzip(gzip.DefaultCompression),
+		log.GinLog(log.App),
 	)
 	if config.GetMode() == config.ModeDev {
 		pprof.Register(router)

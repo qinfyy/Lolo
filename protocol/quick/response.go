@@ -1,16 +1,20 @@
 package quick
 
 type Response struct {
-	Result bool        `json:"result"`
-	Data   interface{} `json:"data"`
-	Error  *Error      `json:"error"`
+	Result  bool        `json:"result"`
+	Status  bool        `json:"status"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+	Error   *Error      `json:"error"`
 }
 
 func NewResponse() *Response {
 	return &Response{
-		Result: true,
-		Data:   nil,
-		Error:  &Error{},
+		Result:  true,
+		Status:  true,
+		Data:    nil,
+		Message: "",
+		Error:   &Error{},
 	}
 }
 
@@ -29,6 +33,14 @@ func (r *Response) SetData(data interface{}) {
 	r.Data = data
 }
 
+type SexType int
+
+const (
+	GENDER_UNDEFINE SexType = 0
+	GENDER_MALE     SexType = 1
+	GENDER_FEMALE   SexType = 2
+)
+
 type ExtInfo struct {
 	OauthType   int    `json:"oauthType"`
 	OauthId     string `json:"oauthId"`
@@ -38,13 +50,11 @@ type ExtInfo struct {
 type UserDataV1 struct {
 	Uid       string `json:"uid"`
 	Username  string `json:"username"`
-	Mobile    string `json:"mobile"`
+	Token     string `json:"token"`
 	IsGuest   int    `json:"isGuest"`
-	RegDevice string `json:"regDevice"`
-	SexType   string `json:"sexType"`
 	IsMbUser  int    `json:"isMbUser"`
 	IsSnsUser int    `json:"isSnsUser"`
-	Token     string `json:"token"`
+	Mobile    string `json:"mobile"`
 }
 
 type UserDataV2 struct {

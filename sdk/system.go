@@ -18,10 +18,20 @@ func systemInitV1(c *gin.Context) {
 	rsp.SetData(&quick.SystemInitResultV1{
 		PayTypes: []*quick.PayType{
 			{
+				PayTypeId: "226",
+				Sort:      "0",
+				BackupGid: "",
+				PayName:   "微信支付",
+				Rebate: &quick.Rebate{
+					Rate:       1,
+					RateConfig: make([]interface{}, 0),
+				},
+			},
+			{
 				PayTypeId: "1",
 				Sort:      "1",
 				BackupGid: "",
-				PayName:   "天地银行",
+				PayName:   "支付宝快捷",
 				Rebate: &quick.Rebate{
 					Rate:       1,
 					RateConfig: make([]interface{}, 0),
@@ -39,16 +49,22 @@ func systemInitV1(c *gin.Context) {
 		RealnameNode: "2",
 		ProductConfig: &quick.PtConfig{
 			UseServiceCenter:  "2",
+			Logo:              "",
 			UseSms:            "1",
+			UseBBS:            "",
+			Gift:              "",
 			IsShowFloat:       "0",
 			AutoOpenAgreement: "1",
 			MainLoginType:     "3",
 			UcentUrl:          "http://sdkapi-of.inutan.com/userCenter/play",
 			UseCpLogin:        "0",
+			FloatLogo:         "",
 			FcmTips: &quick.FcmTips{
 				NoAdultLogoutTip: "根据法规管控，当前为防沉迷管控时间，您将被强制下线。",
 				GuestLoginTip:    "根据国家新闻出版署下发《关于进一步严格管理 切实防止未成年人沉迷网络游戏的通知》，严格限制向未成年人提供网络游戏服务的时间，所有网络游戏企业仅可在周五、周六、周日和法定节假日每日20时至21时向未成年人提供1小时服务，其他时间均不得以任何形式向未成年人提供网络游戏服务。",
 				MinorLoginTip:    "根据国家新闻出版署下发《关于进一步严格管理 切实防止未成年人沉迷网络游戏的通知》，严格限制向未成年人提供网络游戏服务的时间，所有网络游戏企业仅可在周五、周六、周日和法定节假日每日20时至21时向未成年人提供1小时服务，其他时间均不得以任何形式向未成年人提供网络游戏服务。",
+				GuestTimeTip:     "",
+				MinorTimeTip:     "",
 			},
 			Theme:           "FF7E0C",
 			UseAppAuth:      "0",
@@ -63,6 +79,7 @@ func systemInitV1(c *gin.Context) {
 				HideRegBtn: 1,
 			},
 			SkinStyle: "0",
+			RmGuestLg: 0,
 		},
 		UseEWallet: "0",
 		AppAuthInfo: &quick.AppAuthInfo{

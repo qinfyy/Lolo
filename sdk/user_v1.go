@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -26,7 +27,6 @@ func getLoginResultV1(user *db.OFQuick) *quick.LoginResultV1 {
 		Message:       "",
 		AuthToken:     user.AuthToken,
 		UserData:      getUserDataV1(user),
-		CheckRealname: 0,
 	}
 	return result
 }
@@ -37,8 +37,6 @@ func getUserDataV1(user *db.OFQuick) *quick.UserDataV1 {
 		Username:  user.Username,
 		Mobile:    "188****8888",
 		IsGuest:   0,
-		RegDevice: user.RegDevice,
-		SexType:   "",
 		IsMbUser:  1,
 		IsSnsUser: 0,
 		Token:     user.UserToken,
@@ -106,4 +104,55 @@ func (s *Server) autoLoginV1(c *gin.Context) {
 	}
 
 	rsp.SetData(getLoginResultV1(user))
+}
+
+func (s *Server) getUserInfoV1(c *gin.Context) {
+	req := new(quick.UserExtraInfoRequest)
+	rsp := quick.NewResponse()
+	defer c.JSON(200, rsp)
+	if err := alg.DecryptedData(c, &req); err != nil {
+		rsp.SetError("解密失败")
+		log.App.Debugf("gin req getUserInfo error: %v", err)
+		return
+	}
+	token, err := s.ToToken(req.AuthToken)
+	if err != nil {
+		rsp.SetError("解密失败")
+		return
+	}
+	user, err := db.GetOFQuick(token.ID ^ authXor)
+	if err != nil {
+		rsp.SetError("没有该账号")
+		return
+	}
+
+	rsp.SetData(&quick.UserExtraInfo{
+		IsBindPhone:   1,
+		NickName:      user.Username,
+		Phone:         "188****8888",
+		SexType:       quick.GENDER_UNDEFINE,
+		RegType:       "3",
+		LastLoginTime: strconv.FormatInt(time.Now().Unix(), 10),
+		FcmShowTips:   0,
+		IsAdult:       1,
+		Timeleft:      0,
+		BindInfo: &quick.BindInfo{
+			BindWX:    &quick.BindQd{Bid: 4},
+			BindQQ:    &quick.BindQd{Bid: 5},
+			BindApple: &quick.BindQd{Bid: 16},
+		},
+	})
+}
+
+func (s *Server) asyUonlineV1(c *gin.Context) {
+	req := new(quick.AsyUonlineRequest)
+	rsp := quick.NewResponse()
+	defer c.JSON(200, rsp)
+	if err := alg.DecryptedData(c, &req); err != nil {
+		rsp.SetError("解密失败")
+		log.App.Debugf("gin req asyUonline error: %v", err)
+		return
+	}
+
+	rsp.SetData(make([]interface{}, 0))
 }

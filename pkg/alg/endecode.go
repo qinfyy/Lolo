@@ -138,12 +138,6 @@ type AutoReq struct {
 	ProductCode string `form:"productCode"`
 }
 
-type ResponseWriter struct {
-	gin.ResponseWriter
-	body    *bytes.Buffer
-	context *gin.Context
-}
-
 func AutoCryptoMiddlewareV1() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		req := new(AutoReq)
@@ -168,7 +162,7 @@ func AutoCryptoMiddlewareV1() gin.HandlerFunc {
 		//	return
 		//}
 		// debug
-		// log.App.Debugf("auto :%s req:%s", c.Request.URL.Path, string(reqPlainText))
+		// log.App.Debugf("SDK V1 :%s req:%s", c.Request.URL.Path, string(reqPlainText))
 		// 写入请求
 		c.Set(decryptedData, reqPlainText)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(reqPlainText))
@@ -201,7 +195,7 @@ func AutoCryptoMiddlewareV2() gin.HandlerFunc {
 			return
 		}
 		// debug
-		// log.App.Debugf("auto :%s req:%s", c.Request.URL.Path, string(reqPlainText))
+		// log.App.Debugf("SDK V2 :%s req:%s", c.Request.URL.Path, string(reqPlainText))
 		// 写入请求
 		c.Set(decryptedData, reqPlainText)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(reqPlainText))

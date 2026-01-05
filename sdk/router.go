@@ -2,11 +2,10 @@ package sdk
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"gucooing/lolo/config"
-	"gucooing/lolo/gdconf"
 	"gucooing/lolo/pkg/alg"
 )
 
@@ -14,12 +13,18 @@ func (s *Server) Router() {
 	s.router.Any("/", HandleDefault)
 
 	s.router.Any("/Resources/*path", resources)
+	s.router.GET("/resolve", resolve)
+	s.router.GET("/config", teConfig)
+	s.router.POST("/sync", teConfig)
 
 	dispatch := s.router.Group("/dispatch")
 	{
+		dispatch.Any("/get_notice_list", getNoticeList)
+		dispatch.Any("/get_notice_url_list", getNoticeUrlList)
 		dispatch.POST("/region_info", regionInfo)
 		dispatch.HEAD("/region_info", HandleDefault)
 		dispatch.POST("/client_hot_update", clientHotUpdate)
+		dispatch.POST("/get_login_url_list", getLoginUrlList)
 		dispatch.GET("/get_client_black_list", getClientBlackList)
 	}
 	s.router.POST("/v3/bind", bindTest)
@@ -28,6 +33,7 @@ func (s *Server) Router() {
 		system := v1.Group("/system")
 		{
 			system.POST("/init", systemInitV1)
+			// system.POST("/getNotice", getNoticeV1)
 		}
 		user := v1.Group("/user")
 		{
@@ -36,8 +42,8 @@ func (s *Server) Router() {
 		}
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/getUserInfo")
-			auth.POST("/asyUonline")
+			auth.POST("/getUserInfo", s.getUserInfoV1)
+			auth.POST("/asyUonline", s.asyUonlineV1)
 		}
 	}
 
@@ -77,102 +83,36 @@ func resources(c *gin.Context) {
 		resp.Header.Get("Content-Type"), resp.Body, nil)
 }
 
-type RegionInfoRequest struct {
-	Version         string `form:"version" binding:"required"`
-	Version2        string `form:"version2" binding:"required"`
-	AccountType     string `form:"accountType" binding:"required"`
-	OS              string `form:"os" binding:"required"`
-	LastLoginSDKUID string `form:"lastloginsdkuid"`
+type ResolveInfo struct {
+	Host string   `json:"host"`
+	Ttl  int      `json:"ttl"`
+	Ips  []string `json:"ips"`
+	Cip  string   `json:"cip"`
+	Cl   []int    `json:"cl"`
 }
 
-type RegionInfo struct {
-	Status           bool   `json:"status"`
-	Message          string `json:"message"`
-	GateTcpIp        string `json:"gate_tcp_ip"`
-	GateTcpPort      int    `json:"gate_tcp_port"`
-	IsServerOpen     bool   `json:"is_server_open"`
-	Text             string `json:"text"`
-	ClientLogTcpIp   string `json:"client_log_tcp_ip"`
-	ClientLogTcpPort int    `json:"client_log_tcp_port"`
-	CurrentVersion   string `json:"currentVersion"`
-	PhotoShareCdnUrl string `json:"photo_share_cdn_url"`
+func resolve(c *gin.Context) {
+	domain := c.Query("domain")
+
+	c.JSON(http.StatusOK, &ResolveInfo{
+		Host: domain,
+		Ttl:  60,
+		Ips:  make([]string, 0),
+		Cip:  c.ClientIP(),
+		Cl:   []int{3},
+	})
 }
 
-func regionInfo(c *gin.Context) {
-	var req RegionInfoRequest
-	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request parameters",
-		})
-		return
-	}
-
-	conf := config.GetGateWay()
-	info := &RegionInfo{
-		Status:           true,
-		Message:          "success",
-		GateTcpIp:        conf.GetOuterIp(),
-		GateTcpPort:      conf.GetOuterPort(),
-		IsServerOpen:     true,
-		Text:             "",
-		ClientLogTcpIp:   config.GetLogServer().GetOuterIp(),
-		ClientLogTcpPort: config.GetLogServer().GetOuterPort(),
-		CurrentVersion:   gdconf.GetClientVersion(req.Version),
-		PhotoShareCdnUrl: "https://cdn-photo-of.inutan.com/cn_prod_main",
-	}
-
-	c.JSONP(http.StatusOK, info)
-}
-
-type GMClientConfig struct {
-	Status               bool   `json:"status"`
-	Message              string `json:"message"`
-	HotOssUrl            string `json:"hotOssUrl"`
-	CurrentVersion       string `json:"currentVersion"`
-	Server               string `json:"server"`
-	SsAppId              string `json:"ssAppId"`
-	SsServerUrl          string `json:"ssServerUrl"`
-	OpenGm               bool   `json:"open_gm"`
-	OpenErrorLog         bool   `json:"open_error_log"`
-	OpenNetConnectingLog bool   `json:"open_netConnecting_log"`
-	IpAddress            string `json:"ipAddress"`
-	PayUrl               string `json:"payUrl"`
-	IsTestServer         bool   `json:"isTestServer"`
-	ErrorLogLevel        int    `json:"error_log_level"`
-	ServerId             string `json:"server_id"`
-	OpenCs               bool   `json:"open_cs"`
-}
-
-func clientHotUpdate(c *gin.Context) {
-	// alg.ProxyGin(c, "http://dsp-prod-of.inutan.com:18881/dispatch/client_hot_update")
-	var req RegionInfoRequest
-	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request parameters",
-		})
-		return
-	}
-
-	info := &GMClientConfig{
-		Status:               true,
-		Message:              "success",
-		HotOssUrl:            "http://cdn-of.inutan.com/Resources;https://cdn-of.inutan.com/Resources",
-		CurrentVersion:       gdconf.GetClientVersion(req.Version),
-		Server:               "cn_prod_main",
-		SsAppId:              "c969ebf346794cc797ed6eb6c3eac089",
-		SsServerUrl:          "https://te-of.inutan.com",
-		OpenGm:               true,
-		OpenErrorLog:         true,
-		OpenNetConnectingLog: true,
-		IpAddress:            c.ClientIP(),
-		PayUrl:               "http://api-callback-of.inutan.com:19701",
-		IsTestServer:         true,
-		ErrorLogLevel:        0,
-		ServerId:             "10001",
-		OpenCs:               true,
-	}
-
-	c.JSONP(http.StatusOK, info)
+func teConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"server_timestamp": time.Now().UnixMilli(),
+			"sync_batch_size":  100,
+			"sync_interval":    90,
+		},
+		"msg": "",
+	})
 }
 
 func bindTest(c *gin.Context) {
@@ -209,19 +149,4 @@ func bindTest(c *gin.Context) {
 	// } else {
 	// 	fmt.Printf("AES解密结果req: %s\n", string(req))
 	// }
-}
-
-type ClientBlack struct {
-	ID           int    `json:"ID"`
-	MANUFACTURER string `json:"MANUFACTURER"`
-	MODEL        string `json:"MODEL"`
-}
-
-func getClientBlackList(c *gin.Context) {
-	c.JSON(http.StatusOK, []*ClientBlack{
-		{ID: 100, MANUFACTURER: "RETRY_LIMITATION", MODEL: "4"},
-		{ID: 600, MANUFACTURER: "HUAWEI", MODEL: ""},
-		{ID: 1000, MANUFACTURER: "Samsung", MODEL: ""},
-		{ID: 2000, MANUFACTURER: "Sony", MODEL: ""},
-	})
 }

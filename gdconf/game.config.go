@@ -72,6 +72,7 @@ func (g *GameConfig) load() {
 	g.loadClientVersion()
 	g.loadGachaProbability()
 	g.loadRsaPem()
+	g.loadNotice()
 
 	// excel
 	g.loadHead()
@@ -101,6 +102,7 @@ type Data struct {
 	ClientVersion     *ClientVersion
 	GachaProbabilitys map[int32]*GachaProbability
 	RsaPem            *RsaPem
+	Notice            *Notice
 }
 
 type Excel struct {
