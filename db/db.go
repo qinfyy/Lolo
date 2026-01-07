@@ -78,7 +78,6 @@ func NewDB(option *Option) error {
 		&OFGameBasic{},
 		&BlackDevice{},
 		&OFFriendInfo{},
-		&OFFriendRequest{},
 		&OFFriend{},
 		&OFFriendBlack{},
 		&OFChatPrivate{},

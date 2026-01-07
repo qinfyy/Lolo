@@ -16,34 +16,24 @@ func (g *Game) Friend(s *model.Player, msg *alg.GameMsg) {
 	}
 	defer g.send(s, msg.PacketId, rsp)
 
+	var friendStatus proto.FriendStatus
 	switch req.Type {
 	case proto.FriendListType_FriendListType_None:
+		friendStatus = proto.FriendStatus_FriendStatus_None
 	case proto.FriendListType_FriendListType_Apply:
-		applyList, err := db.GetAllFriendApply(s.UserId)
-		if err != nil {
-			log.Game.Warnf("UserId:%v func db.GetAllFriendApply:%v", s.UserId, err)
-			return
-		}
-		for _, v := range applyList {
-			alg.AddList(&rsp.Info, g.GetFriendBriefInfo(v.RequestUserId, nil))
-		}
+		friendStatus = proto.FriendStatus_FriendStatus_Apply
 	case proto.FriendListType_FriendListType_Friend:
-		allFriend, err := db.GetAllFiend(s.UserId)
-		if err != nil {
-			log.Game.Warnf("UserId:%v func db.GetAllFriend:%v", s.UserId, err)
-			return
-		}
-		for _, v := range allFriend {
-			alg.AddList(&rsp.Info, g.GetFriendBriefInfo(v.FriendId, v))
-		}
+		friendStatus = proto.FriendStatus_FriendStatus_Friend
 	case proto.FriendListType_FriendListType_Black:
-		allBlack, err := db.GetAllFriendBlack(s.UserId)
-		if err != nil {
-			log.Game.Warnf("UserId:%v func db.GetAllFriendBlack:%v", s.UserId, err)
-		}
-		for _, v := range allBlack {
-			alg.AddList(&rsp.Info, g.GetFriendBriefInfo(v.BlackId, nil))
-		}
+		friendStatus = proto.FriendStatus_FriendStatus_Black
+	}
+
+	friendList, err := db.GetAllFriendByStatus(s.UserId, friendStatus)
+	if err != nil {
+		log.Game.Warnf("UserId:%v func db.GetAllFriendByStatus:%v", s.UserId, err)
+	}
+	for _, v := range friendList {
+		alg.AddList(&rsp.Info, g.GetFriendBriefInfo(v.FriendId, v))
 	}
 }
 
@@ -53,6 +43,14 @@ func (g *Game) FriendAdd(s *model.Player, msg *alg.GameMsg) {
 		Status: proto.StatusCode_StatusCode_Ok,
 	}
 	defer g.send(s, msg.PacketId, rsp)
+	// 判断是否被拉黑
+	if ok, err := db.IsUserBlack(s.UserId, req.PlayerId); err != nil {
+		log.Game.Warnf("UserId:%v db.IsUserBlack:%v", s.UserId, err)
+		return
+	} else if ok {
+		rsp.Status = proto.StatusCode_StatusCode_FriendBlack
+		return
+	}
 	// 判断是否存在好友关系
 	if conn, err := db.GetIsFiend(s.UserId, req.PlayerId); err != nil {
 		log.Game.Warnf("UserId:%v db.GetIsFiend:%v", s.UserId, err)
@@ -67,7 +65,7 @@ func (g *Game) FriendAdd(s *model.Player, msg *alg.GameMsg) {
 		return
 	} else if conn != 0 {
 		// 直接同意好友申请
-		err = db.FriendHandleApply(s.UserId, req.PlayerId, true)
+		err = db.FriendHandleApply(req.PlayerId, s.UserId, true)
 		return
 	}
 	// 都没有就写入申请请求
@@ -93,7 +91,7 @@ func (g *Game) FriendHandle(s *model.Player, msg *alg.GameMsg) {
 		Status: proto.StatusCode_StatusCode_Ok,
 	}
 	defer g.send(s, msg.PacketId, rsp)
-	err := db.FriendHandleApply(s.UserId, req.PlayerId, req.IsAgree)
+	err := db.FriendHandleApply(req.PlayerId, s.UserId, req.IsAgree)
 	if err != nil {
 		rsp.Status = proto.StatusCode_StatusCode_FriendNotApply
 		log.Game.Warnf("UserId:%v func db.FriendHandleApply:%v", s.UserId, err)
