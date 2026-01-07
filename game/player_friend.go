@@ -140,17 +140,35 @@ func (g *Game) FriendBlack(s *model.Player, msg *alg.GameMsg) {
 }
 
 func (g *Game) OtherPlayerInfo(s *model.Player, msg *alg.GameMsg) {
-	//req := msg.Body.(*proto.OtherPlayerInfoReq)
-	//rsp := &proto.OtherPlayerInfoRsp{
-	//	Status:           proto.StatusCode_StatusCode_Ok,
-	//	OtherInfo:        nil,
-	//	FriendStatus:     0,
-	//	Alias:            "",
-	//	FriendTag:        0,
-	//	FriendIntimacy:   0,
-	//	FriendBackground: 0,
-	//}
-	//defer g.send(s, msg.PacketId, rsp)
+	req := msg.Body.(*proto.OtherPlayerInfoReq)
+	rsp := &proto.OtherPlayerInfoRsp{
+		Status:           proto.StatusCode_StatusCode_Ok,
+		OtherInfo:        nil,
+		FriendStatus:     0,
+		Alias:            "",
+		FriendTag:        0,
+		FriendIntimacy:   0,
+		FriendBackground: 0,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+	friend, err := db.GetFiend(s.UserId, req.PlayerId)
+	if err != nil {
+		log.Game.Warnf("UserId:%v db.GetFiend:%v", s.UserId, err)
+		return
+	}
+	basic, err := db.GetGameBasic(req.PlayerId)
+	if err != nil {
+		log.Game.Warnf("GetGameBasic:%v func db.GetGameBasic:%v", req.PlayerId, err)
+		return
+	}
+	rsp.OtherInfo = g.PlayerBriefInfo(basic)
+	if friend != nil {
+		rsp.FriendStatus = friend.Status
+		rsp.Alias = friend.Alias
+		rsp.FriendTag = friend.FriendTag
+		rsp.FriendIntimacy = friend.FriendIntimacy
+		rsp.FriendBackground = friend.FriendBackground
+	}
 }
 
 func (g *Game) FriendSearch(s *model.Player, msg *alg.GameMsg) {

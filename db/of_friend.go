@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"gucooing/lolo/protocol/proto"
 	"time"
 
@@ -120,6 +121,17 @@ func GetIsFiend(userId, friendId uint32) (int64, error) {
 		Where("user_id = ? AND friend_id = ? AND status = ?", userId, friendId, proto.FriendStatus_FriendStatus_Friend).
 		Count(&count).Error
 	return count, err
+}
+
+// 尝试获取可能存在的好友关系
+func GetFiend(userId, friendId uint32) (*OFFriend, error) {
+	off := &OFFriend{}
+	err := db.Where("user_id = ? AND friend_id = ? AND status = ?", userId, friendId, proto.FriendStatus_FriendStatus_Friend).
+		First(&off).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return off, err
 }
 
 // 删除好友关系
