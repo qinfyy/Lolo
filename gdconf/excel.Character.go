@@ -5,9 +5,10 @@ import (
 )
 
 type Character struct {
-	all             *excel.AllCharacterDatas
-	CharacterAllMap map[uint32]*CharacterAllInfo
-	GrowthLevelMap  map[int32]map[uint32]*excel.CharacterLevelInfo
+	all              *excel.AllCharacterDatas
+	CharacterAllMap  map[uint32]*CharacterAllInfo
+	GrowthLevelMap   map[int32]map[uint32]*excel.CharacterLevelInfo
+	CharacterStarMap map[int32]map[uint32]*excel.CharacterStarInfo
 }
 
 type CharacterAllInfo struct {
@@ -18,9 +19,10 @@ type CharacterAllInfo struct {
 
 func (g *GameConfig) loadCharacter() {
 	info := &Character{
-		all:             new(excel.AllCharacterDatas),
-		CharacterAllMap: make(map[uint32]*CharacterAllInfo),
-		GrowthLevelMap:  make(map[int32]map[uint32]*excel.CharacterLevelInfo),
+		all:              new(excel.AllCharacterDatas),
+		CharacterAllMap:  make(map[uint32]*CharacterAllInfo),
+		GrowthLevelMap:   make(map[int32]map[uint32]*excel.CharacterLevelInfo),
+		CharacterStarMap: make(map[int32]map[uint32]*excel.CharacterStarInfo),
 	}
 	g.Excel.Character = info
 	name := "Character.json"
@@ -40,6 +42,12 @@ func (g *GameConfig) loadCharacter() {
 		}
 		return info.GrowthLevelMap[id]
 	}
+	getStarMap := func(id int32) map[uint32]*excel.CharacterStarInfo {
+		if info.CharacterStarMap[id] == nil {
+			info.CharacterStarMap[id] = make(map[uint32]*excel.CharacterStarInfo)
+		}
+		return info.CharacterStarMap[id]
+	}
 
 	for _, v := range info.all.GetCharacter().GetDatas() {
 		getCharacterAllMap(v.ID).CharacterInfo = v
@@ -51,6 +59,12 @@ func (g *GameConfig) loadCharacter() {
 		levelMap := getLevelMap(v.ID)
 		for _, v2 := range v.GetLevelInfo() {
 			levelMap[uint32(v2.Level)] = v2
+		}
+	}
+	for _, v := range info.all.GetCharacterStar().GetDatas() {
+		levelMap := getStarMap(v.ID)
+		for _, v2 := range v.GetStarInfo() {
+			levelMap[uint32(v2.Star)] = v2
 		}
 	}
 }

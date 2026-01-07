@@ -79,8 +79,7 @@ type CharacterInfo struct {
 	EquipmentPresetList       map[uint32]*EquipmentPreset `json:"equipmentPresets,omitempty"`          // 角色装备预设表
 	InUseOutfitPresetIndex    uint32                      `json:"inUseOutfitPresetIndex,omitempty"`    // 当前服装表
 	OutfitPresetList          map[uint32]*OutfitPreset    `json:"outfitPresets,omitempty"`             // 角色服装预设表
-	// 临时数据
-	GatherWeapon uint32 `json:"-"` // 手持道具
+	GatherWeapon              uint32                      `json:"gatherWeapon,omitempty"`              // 手持道具
 }
 
 func newCharacterInfo(characterId uint32) *CharacterInfo {
@@ -195,7 +194,7 @@ func (c *CharacterInfo) Character() *proto.Character {
 		InUseEquipmentPresetIndex: c.InUseEquipmentPresetIndex,
 		OutfitPresets:             c.GetPbOutfitPresets(),
 		InUseOutfitPresetIndex:    c.InUseOutfitPresetIndex,
-		GatherWeapon:              0,
+		GatherWeapon:              c.GatherWeapon,
 		CharacterAppearance:       c.GetPbCharacterAppearance(),
 		CharacterSkillList:        c.GetPbCharacterSkillList(),
 		RewardedAchievementIdLst:  make([]uint32, 0),
