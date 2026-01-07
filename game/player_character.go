@@ -38,7 +38,10 @@ func (g *Game) CharacterLevelUp(s *model.Player, msg *alg.GameMsg) {
 		Level:  0,
 		Exp:    0,
 	}
-	defer g.send(s, msg.PacketId, rsp)
+	defer func() {
+		g.send(s, msg.PacketId, rsp)
+		g.SceneActionCharacterUpdate(s, proto.SceneActionType_SceneActionType_UpdateCharacterLv, req.CharId)
+	}()
 	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharId)
 	if characterInfo == nil {
 		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
@@ -98,7 +101,10 @@ func (g *Game) CharacterLevelBreak(s *model.Player, msg *alg.GameMsg) {
 		Exp:      0,
 		MaxLevel: 0,
 	}
-	defer g.send(s, msg.PacketId, rsp)
+	defer func() {
+		g.send(s, msg.PacketId, rsp)
+		g.SceneActionCharacterUpdate(s, proto.SceneActionType_SceneActionType_UpdateCharacterBreakLv, req.CharId)
+	}()
 	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharId)
 	if characterInfo == nil {
 		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
@@ -358,5 +364,48 @@ func (g *Game) CharacterGatherWeaponUpdate(s *model.Player, msg *alg.GameMsg) {
 	} else {
 		characterInfo.GatherWeapon = 0
 	}
+}
 
+func (g *Game) CharacterStarUp(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.CharacterStarUpReq)
+	rsp := &proto.CharacterStarUpRsp{
+		Status: proto.StatusCode_StatusCode_Ok,
+		CharId: req.CharId,
+		Star:   0,
+		Items:  make([]*proto.ItemDetail, 0),
+	}
+	defer func() {
+		g.send(s, msg.PacketId, rsp)
+		g.SceneActionCharacterUpdate(s, proto.SceneActionType_SceneActionType_UpdateCharacterStar, req.CharId)
+	}()
+	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharId)
+	if characterInfo == nil {
+		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
+		log.Game.Warnf("保存角色升星失败,角色%v不存在", req.CharId)
+		return
+	}
+	conf := gdconf.GetCharacterStar(characterInfo.CharacterId, characterInfo.Star+1)
+	if conf == nil {
+		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
+		return
+	}
+	// 申请事务
+	tx, err := s.GetItemModel().Begin()
+	if err != nil {
+		rsp.Status = proto.StatusCode_StatusCode_ItemNotEnough
+		log.Game.Errorf("玩家:%v申请背包事务失败:%s", s.UserId, err.Error())
+		return
+	}
+	tx.DelBaseItem(uint32(conf.ItemID), int64(conf.ItemNum))
+	if tx.Error != nil {
+		tx.Rollback()
+		rsp.Status = proto.StatusCode_StatusCode_ExploreNumLimit
+		log.Game.Errorf("玩家:%v扣除背包物品失败:%s", s.UserId, tx.Error.Error())
+		return
+	}
+	tx.Commit()
+	g.send(s, 0, tx.PackNotice)
+
+	characterInfo.Star++
+	rsp.Star = characterInfo.Star
 }

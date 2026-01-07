@@ -71,6 +71,7 @@ func (g *Game) newRouter() {
 		cmd.CharacterEquipUpdateReq:        g.CharacterEquipUpdate,        // 角色更新装备
 		cmd.UpdateCharacterAppearanceReq:   g.UpdateCharacterAppearance,   // 更新角色外观
 		cmd.CharacterGatherWeaponUpdateReq: g.CharacterGatherWeaponUpdate, // 更新手持工具请求
+		cmd.CharacterStarUpReq:             g.CharacterStarUp,             // 角色升星请求
 		// 信息记录
 		cmd.GetArchiveInfoReq: g.GetArchiveInfo, // 获取记录的信息
 		cmd.SetArchiveInfoReq: g.SetArchiveInfo, // 设置信息
