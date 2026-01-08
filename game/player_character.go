@@ -201,6 +201,54 @@ func (g *Game) OutfitPresetSwitch(s *model.Player, msg *alg.GameMsg) {
 	}
 	characterInfo.InUseOutfitPresetIndex = req.UsePresetIndex
 }
+
+func (g *Game) OutfitColorantSelect(s *model.Player, msg *alg.GameMsg) {
+	// req := msg.Body.(*proto.OutfitColorantSelectReq)
+	rsp := &proto.OutfitColorantSelectRsp{
+		Status: proto.StatusCode_StatusCode_Ok,
+		Param: &proto.OutfitDyeParam{
+			PictureId: 1,
+			Params:    make([]float64, 0),
+			Uvy:       0,
+			IsDye:     false,
+		},
+	}
+	defer g.send(s, msg.PacketId, rsp)
+}
+
+func (g *Game) OutfitDye(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.OutfitDyeReq)
+	rsp := &proto.OutfitDyeRsp{
+		Status:   proto.StatusCode_StatusCode_Ok,
+		OutfitId: req.OutfitId,
+		PosColor: &proto.PosColor{
+			Pos:   req.Pos,
+			Red:   0,
+			Green: 0,
+			Blue:  0,
+		},
+		TotalGuaranteeDyeNum: 5,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+}
+
+func (g *Game) OutFitDyeSave(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.OutFitDyeSaveReq)
+	rsp := &proto.OutFitDyeSaveRsp{
+		Status:      proto.StatusCode_StatusCode_Ok,
+		SchemeIndex: req.SchemeIndex,
+		PosColor: &proto.PosColor{
+			Pos:   req.Pos,
+			Red:   0,
+			Green: 0,
+			Blue:  0,
+		},
+		Items:           make([]*proto.ItemDetail, 0),
+		IsSaveDyeResult: req.IsSaveDyeResult,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+}
+
 func (g *Game) CharacterEquipUpdate(s *model.Player, msg *alg.GameMsg) {
 	req := msg.Body.(*proto.CharacterEquipUpdateReq)
 	rsp := &proto.CharacterEquipUpdateRsp{

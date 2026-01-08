@@ -68,6 +68,9 @@ func (g *Game) newRouter() {
 		cmd.CharacterLevelBreakReq:          g.CharacterLevelBreak,          // 角色突破
 		cmd.OutfitPresetUpdateReq:           g.OutfitPresetUpdate,           // 保存预设装扮
 		cmd.OutfitPresetSwitchReq:           g.OutfitPresetSwitch,           // 切换装扮方案
+		cmd.OutfitColorantSelectReq:         g.OutfitColorantSelect,         // 染色选择请求
+		cmd.OutfitDyeReq:                    g.OutfitDye,                    // 染色请求
+		cmd.OutFitDyeSaveReq:                g.OutFitDyeSave,                // 保存染色结果
 		cmd.CharacterEquipUpdateReq:         g.CharacterEquipUpdate,         // 角色更新装备
 		cmd.UpdateCharacterAppearanceReq:    g.UpdateCharacterAppearance,    // 更新角色外观
 		cmd.CharacterGatherWeaponUpdateReq:  g.CharacterGatherWeaponUpdate,  // 更新手持工具请求
