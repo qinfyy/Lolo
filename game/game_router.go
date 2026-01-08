@@ -64,15 +64,17 @@ func (g *Game) newRouter() {
 		cmd.GachaReq:              g.Gacha,              // 抽卡，启动！
 		cmd.OptionalUpPoolItemReq: g.OptionalUpPoolItem, // 设置保底物品
 		// 角色
-		cmd.GetCharacterAchievementListReq: g.GetCharacterAchievementList, // 获取角色成就情况
-		cmd.CharacterLevelUpReq:            g.CharacterLevelUp,            // 角色升级
-		cmd.CharacterLevelBreakReq:         g.CharacterLevelBreak,         // 角色突破
-		cmd.OutfitPresetUpdateReq:          g.OutfitPresetUpdate,          // 保存预设装扮
-		cmd.CharacterEquipUpdateReq:        g.CharacterEquipUpdate,        // 角色更新装备
-		cmd.UpdateCharacterAppearanceReq:   g.UpdateCharacterAppearance,   // 更新角色外观
-		cmd.CharacterGatherWeaponUpdateReq: g.CharacterGatherWeaponUpdate, // 更新手持工具请求
-		cmd.CharacterStarUpReq:             g.CharacterStarUp,             // 角色升星请求
-		cmd.CharacterSkillLevelUpReq:       g.CharacterSkillLevelUp,       // 角色技能升级请求
+		cmd.CharacterLevelUpReq:             g.CharacterLevelUp,             // 角色升级
+		cmd.CharacterLevelBreakReq:          g.CharacterLevelBreak,          // 角色突破
+		cmd.OutfitPresetUpdateReq:           g.OutfitPresetUpdate,           // 保存预设装扮
+		cmd.OutfitPresetSwitchReq:           g.OutfitPresetSwitch,           // 切换装扮方案
+		cmd.CharacterEquipUpdateReq:         g.CharacterEquipUpdate,         // 角色更新装备
+		cmd.UpdateCharacterAppearanceReq:    g.UpdateCharacterAppearance,    // 更新角色外观
+		cmd.CharacterGatherWeaponUpdateReq:  g.CharacterGatherWeaponUpdate,  // 更新手持工具请求
+		cmd.CharacterStarUpReq:              g.CharacterStarUp,              // 角色升星请求
+		cmd.CharacterSkillLevelUpReq:        g.CharacterSkillLevelUp,        // 角色技能升级请求
+		cmd.GetCharacterAchievementListReq:  g.GetCharacterAchievementList,  // 获取角色成就情况
+		cmd.GetCharacterAchievementAwardReq: g.GetCharacterAchievementAward, // 角色领取成就奖励
 		// 信息记录
 		cmd.GetArchiveInfoReq: g.GetArchiveInfo, // 获取记录的信息
 		cmd.SetArchiveInfoReq: g.SetArchiveInfo, // 设置信息
@@ -101,6 +103,9 @@ func (g *Game) newRouter() {
 		cmd.BattleEncounterStateUpdateReq: g.BattleEncounterStateUpdate, // 战斗遭遇开始更新请求
 		// 深渊
 		cmd.AbyssInfoReq: g.AbyssInfo, // 深渊信息请求
+		// 邮箱
+		cmd.GetMailsReq:     g.GetMails,     // 获取邮件列表
+		cmd.OperateMailsReq: g.OperateMails, // 邮件操作请求
 
 		cmd.PlayerVitalityReq:        g.PlayerVitality,
 		cmd.BossRushInfoReq:          g.BossRushInfo,
@@ -114,7 +119,6 @@ func (g *Game) newRouter() {
 		cmd.SceneProcessListReq:      g.SceneProcessList,
 		cmd.WishListByFriendIdReq:    g.WishListByFriendId,
 		cmd.GetLifeInfoReq:           g.GetLifeInfo,
-		cmd.GetMailsReq:              g.GetMails,
 		cmd.GetAchieveOneGroupReq:    g.GetAchieveOneGroup,
 		cmd.GetAchieveGroupListReq:   g.GetAchieveGroupList,
 		cmd.GenericGameAReq:          g.GenericGameA,

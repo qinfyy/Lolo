@@ -2,9 +2,29 @@ package model
 
 import (
 	"gucooing/lolo/db"
+	"gucooing/lolo/pkg/alg"
 	"gucooing/lolo/pkg/log"
 	"gucooing/lolo/protocol/proto"
 )
+
+type Expression uint32
+
+func (e Expression) ItemDetail() *proto.ItemDetail {
+	info := &proto.ItemDetail{
+		MainItem: &proto.ItemInfo{
+			ItemId:  uint32(e),
+			ItemTag: proto.EBagItemTag_EBagItemTag_Expression,
+			Item: &proto.ItemInfo_BaseItem{
+				BaseItem: &proto.BaseItem{
+					ItemId: uint32(e),
+					Num:    1,
+				},
+			},
+		},
+		PackType: proto.PackType_PackType_Inventory,
+	}
+	return info
+}
 
 type ChatModel struct {
 	UnLockExpression []uint32 // 已解锁的表情
@@ -29,6 +49,11 @@ func (c *ChatModel) GetUnLockExpression() []uint32 {
 		c.UnLockExpression = make([]uint32, 0)
 	}
 	return c.UnLockExpression
+}
+
+func (c *ChatModel) AddUnExpression(expression uint32) Expression {
+	alg.AddSlice(&c.UnLockExpression, expression)
+	return Expression(expression)
 }
 
 func (s *Player) GetPrivateChatOffline(private *db.OFChatPrivate) *proto.PrivateChatOffline {

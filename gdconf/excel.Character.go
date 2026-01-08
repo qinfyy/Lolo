@@ -10,6 +10,7 @@ type Character struct {
 	GrowthLevelMap   map[int32]map[uint32]*excel.CharacterLevelInfo
 	CharacterStarMap map[uint32]map[uint32]*excel.CharacterStarInfo
 	CharacterByShop  map[uint32]*excel.CharacterConfigure
+	AchieveRewardMap map[uint32]map[uint32]*excel.CharacterAchieveRewardInfo
 }
 
 type CharacterAllInfo struct {
@@ -25,6 +26,7 @@ func (g *GameConfig) loadCharacter() {
 		GrowthLevelMap:   make(map[int32]map[uint32]*excel.CharacterLevelInfo),
 		CharacterStarMap: make(map[uint32]map[uint32]*excel.CharacterStarInfo),
 		CharacterByShop:  make(map[uint32]*excel.CharacterConfigure),
+		AchieveRewardMap: make(map[uint32]map[uint32]*excel.CharacterAchieveRewardInfo),
 	}
 	g.Excel.Character = info
 	name := "Character.json"
@@ -50,6 +52,12 @@ func (g *GameConfig) loadCharacter() {
 		}
 		return info.CharacterStarMap[id]
 	}
+	getAchieveRewardMap := func(id uint32) map[uint32]*excel.CharacterAchieveRewardInfo {
+		if info.AchieveRewardMap[id] == nil {
+			info.AchieveRewardMap[id] = make(map[uint32]*excel.CharacterAchieveRewardInfo)
+		}
+		return info.AchieveRewardMap[id]
+	}
 
 	for _, v := range info.all.GetCharacter().GetDatas() {
 		getCharacterAllMap(v.ID).CharacterInfo = v
@@ -68,6 +76,12 @@ func (g *GameConfig) loadCharacter() {
 		levelMap := getStarMap(uint32(v.ID))
 		for _, v2 := range v.GetStarInfo() {
 			levelMap[uint32(v2.Star)] = v2
+		}
+	}
+	for _, v := range info.all.GetCharacterAchieveReward().GetDatas() {
+		rewardMap := getAchieveRewardMap(uint32(v.ID))
+		for _, v2 := range v.GetAchieveRewardInfo() {
+			rewardMap[uint32(v2.Num)] = v2
 		}
 	}
 }
@@ -109,4 +123,12 @@ func GetCharacterStar(characterId, star uint32) *excel.CharacterStarInfo {
 
 func GetCharacterInfoByShop(shopId uint32) *excel.CharacterConfigure {
 	return cc.Excel.Character.CharacterByShop[shopId]
+}
+
+func GetAchieveRewardInfo(characterId, rewardIndex uint32) *excel.CharacterAchieveRewardInfo {
+	list := cc.Excel.Character.AchieveRewardMap[characterId]
+	if list == nil {
+		return nil
+	}
+	return list[rewardIndex]
 }

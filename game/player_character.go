@@ -17,26 +17,6 @@ func (g *Game) GetAllCharacterEquip(s *model.Player, msg *alg.GameMsg) {
 	defer g.send(s, msg.PacketId, rsp)
 }
 
-func (g *Game) GetCharacterAchievementList(s *model.Player, msg *alg.GameMsg) {
-	req := msg.Body.(*proto.GetCharacterAchievementListReq)
-	rsp := &proto.GetCharacterAchievementListRsp{
-		Status:                  proto.StatusCode_StatusCode_Ok,
-		CharacterAchievementLst: make([]*proto.Achieve, 0),
-		HasRewardedIds:          make([]uint32, 0),
-		IsUnlockedPayment:       false,
-		CharacterId:             req.CharacterId,
-		RewardedIdLst:           make([]uint32, 0),
-	}
-	defer g.send(s, msg.PacketId, rsp)
-	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharacterId)
-	if characterInfo == nil {
-		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
-		log.Game.Warnf("获取角色成就列表失败,角色%v不存在", req.CharacterId)
-		return
-	}
-	rsp.IsUnlockedPayment = characterInfo.IsUnlockPayment
-}
-
 func (g *Game) CharacterLevelUp(s *model.Player, msg *alg.GameMsg) {
 	req := msg.Body.(*proto.CharacterLevelUpReq)
 	rsp := &proto.CharacterLevelUpRsp{
@@ -202,6 +182,25 @@ func (g *Game) OutfitPresetUpdate(s *model.Player, msg *alg.GameMsg) {
 	outfitPreset.PendRightFootDyeSchemeIndex = req.Preset.PendRightFootDyeSchemeIndex
 }
 
+func (g *Game) OutfitPresetSwitch(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.OutfitPresetSwitchReq)
+	rsp := &proto.OutfitPresetSwitchRsp{
+		Status:         proto.StatusCode_StatusCode_Ok,
+		CharId:         req.CharId,
+		UsePresetIndex: req.UsePresetIndex,
+	}
+	defer func() {
+		g.send(s, msg.PacketId, rsp)
+		g.SceneActionCharacterUpdate(
+			s, proto.SceneActionType_SceneActionType_UpdateFashion, req.CharId)
+	}()
+	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharId)
+	if characterInfo == nil {
+		log.Game.Warnf("保存角色预设装扮失败,角色%v不存在", req.CharId)
+		return
+	}
+	characterInfo.InUseOutfitPresetIndex = req.UsePresetIndex
+}
 func (g *Game) CharacterEquipUpdate(s *model.Player, msg *alg.GameMsg) {
 	req := msg.Body.(*proto.CharacterEquipUpdateReq)
 	rsp := &proto.CharacterEquipUpdateRsp{
@@ -467,4 +466,57 @@ func (g *Game) CharacterSkillLevelUp(s *model.Player, msg *alg.GameMsg) {
 
 	skillInfo.SkillLevel++
 	rsp.Skill = skillInfo.CharacterSkill()
+}
+
+func (g *Game) GetCharacterAchievementList(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.GetCharacterAchievementListReq)
+	rsp := &proto.GetCharacterAchievementListRsp{
+		Status:                  proto.StatusCode_StatusCode_Ok,
+		CharacterAchievementLst: make([]*proto.Achieve, 0),
+		HasRewardedIds:          make([]uint32, 0), // ok
+		IsUnlockedPayment:       false,             // ok
+		CharacterId:             req.CharacterId,   // ok
+		RewardedIdLst:           make([]uint32, 0), // ok
+	}
+	defer g.send(s, msg.PacketId, rsp)
+	characterInfo := s.GetCharacterModel().GetCharacterInfo(req.CharacterId)
+	if characterInfo == nil {
+		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
+		log.Game.Warnf("获取角色成就列表失败,角色%v不存在", req.CharacterId)
+		return
+	}
+	rsp.IsUnlockedPayment = characterInfo.IsUnlockPayment
+
+	achievement := characterInfo.GetCharacterAchievement()
+	rsp.HasRewardedIds = achievement.HasRewardedIds
+	rsp.RewardedIdLst = achievement.RewardedIndexLst
+}
+
+func (g *Game) GetCharacterAchievementAward(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.GetCharacterAchievementAwardReq)
+	rsp := &proto.GetCharacterAchievementAwardRsp{
+		Status:           proto.StatusCode_StatusCode_Ok,
+		Items:            make([]*proto.ItemDetail, 0),
+		RewardedIndexLst: make([]uint32, 0),
+		CharacterId:      req.CharacterId,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+	conf := gdconf.GetAchieveRewardInfo(req.CharacterId, req.RewardIndex)
+	achievement := s.GetCharacterModel().GetCharacterInfo(req.CharacterId).GetCharacterAchievement()
+	if conf == nil || achievement == nil {
+		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
+		log.Game.Warnf("获取角色成就列表失败,角色%v不存在", req.CharacterId)
+		return
+	}
+	if int64(conf.UnlockItemCount) > s.GetItemModel().GetItemBaseInfo(uint32(conf.UnlockItemID)).Num {
+		rsp.Status = proto.StatusCode_StatusCode_CharacterPlaced
+		return
+	}
+	// 领取奖励
+	item := s.AddAllTypeItem(uint32(conf.RewardItemID), int64(conf.RewardItemCount))
+	if item != nil {
+		alg.AddList(&rsp.Items, item.AddItemDetail())
+		alg.AddSlice(&achievement.RewardedIndexLst, req.RewardIndex)
+	}
+	rsp.RewardedIndexLst = achievement.RewardedIndexLst
 }

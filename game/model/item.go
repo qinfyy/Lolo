@@ -30,9 +30,6 @@ func DefaultItemModel() *ItemModel {
 }
 
 func (s *Player) GetItemModel() *ItemModel {
-	if s == nil {
-		return nil
-	}
 	if s.Item == nil {
 		s.Item = DefaultItemModel()
 	}
@@ -89,7 +86,7 @@ func (s *Player) AddAllTypeItem(id uint32, num int64) *AddItemCtx {
 	tag := proto.EBagItemTag(conf.NewBagItemTag)
 	switch tag {
 	case proto.EBagItemTag_EBagItemTag_Gift,
-		proto.EBagItemTag_EBagItemTag_Fragment,
+		proto.EBagItemTag_EBagItemTag_Fragment, // 角色碎片
 		proto.EBagItemTag_EBagItemTag_Collection,
 		proto.EBagItemTag_EBagItemTag_Material,
 		proto.EBagItemTag_EBagItemTag_Food,
@@ -102,7 +99,7 @@ func (s *Player) AddAllTypeItem(id uint32, num int64) *AddItemCtx {
 		proto.EBagItemTag_EBagItemTag_StrengthStone,
 		proto.EBagItemTag_EBagItemTag_ExpBook,
 		proto.EBagItemTag_EBagItemTag_UnlockAbilityItem,
-		proto.EBagItemTag_EBagItemTag_CharacterBadge,
+		proto.EBagItemTag_EBagItemTag_CharacterBadge, // 角色纪念币
 		proto.EBagItemTag_EBagItemTag_DyeStuff,
 		proto.EBagItemTag_EBagItemTag_PlayerExp,
 		proto.EBagItemTag_EBagItemTag_WorldLevel,
@@ -117,7 +114,6 @@ func (s *Player) AddAllTypeItem(id uint32, num int64) *AddItemCtx {
 		proto.EBagItemTag_EBagItemTag_ShowArmor,
 		proto.EBagItemTag_EBagItemTag_TeleportKey,
 		proto.EBagItemTag_EBagItemTag_WallPaper,
-		proto.EBagItemTag_EBagItemTag_Expression,
 		proto.EBagItemTag_EBagItemTag_MoonCard,
 		proto.EBagItemTag_EBagItemTag_PhoneCase,
 		proto.EBagItemTag_EBagItemTag_Pendant,
@@ -146,6 +142,8 @@ func (s *Player) AddAllTypeItem(id uint32, num int64) *AddItemCtx {
 			return nil
 		}
 		i.AddItemBase(uint32(conf.ID), 1)
+	case proto.EBagItemTag_EBagItemTag_Expression: // 表情
+		ctx.EBagItemTag = s.GetChatModel().AddUnExpression(id)
 	case proto.EBagItemTag_EBagItemTag_Weapon:
 		ctx.EBagItemTag = i.AddItemWeapon(id)
 	case proto.EBagItemTag_EBagItemTag_Fashion:

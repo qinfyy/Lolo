@@ -49,19 +49,9 @@ func (c *CharacterModel) GetPlacedCharacters() []uint32 {
 
 func (c *CharacterModel) SetPlacedCharacter(characterId uint32, isRemove bool) {
 	if isRemove {
-		for i := 0; i < len(c.PlacedCharacters); i++ {
-			if c.PlacedCharacters[i] == characterId {
-				c.PlacedCharacters = append(c.PlacedCharacters[:i], c.PlacedCharacters[i+1:]...)
-				return
-			}
-		}
+		alg.DelSlice(&c.PlacedCharacters, characterId)
 	} else {
-		for _, id := range c.PlacedCharacters {
-			if id == characterId {
-				return
-			}
-		}
-		c.PlacedCharacters = append(c.PlacedCharacters, characterId)
+		alg.AddSlice(&c.PlacedCharacters, characterId)
 	}
 }
 
@@ -81,6 +71,7 @@ type CharacterInfo struct {
 	OutfitPresetList          map[uint32]*OutfitPreset    `json:"outfitPresets,omitempty"`             // 角色服装预设表
 	GatherWeapon              uint32                      `json:"gatherWeapon,omitempty"`              // 手持道具
 	IsUnlockPayment           bool                        `json:"isUnlockPayment,omitempty"`           // 已解锁购买
+	Achievement               *CharacterAchievement       `json:"achievement,omitempty"`               // 角色成就信息
 }
 
 func newCharacterInfo(characterId uint32) *CharacterInfo {
@@ -577,4 +568,22 @@ func (c *CharacterInfo) GetPbOutfitPresets() []*proto.OutfitPreset {
 	}
 
 	return pbInfoList
+}
+
+type CharacterAchievement struct {
+	HasRewardedIds   []uint32 `json:"hasRewardedIds,omitempty"`   // 已领取的奖励id
+	RewardedIndexLst []uint32 `json:"rewardedIndexLst,omitempty"` // 已领取的奖励序号
+}
+
+func (c *CharacterInfo) GetCharacterAchievement() *CharacterAchievement {
+	if c == nil {
+		return nil
+	}
+	if c.Achievement == nil {
+		c.Achievement = &CharacterAchievement{
+			HasRewardedIds:   make([]uint32, 0),
+			RewardedIndexLst: make([]uint32, 0),
+		}
+	}
+	return c.Achievement
 }

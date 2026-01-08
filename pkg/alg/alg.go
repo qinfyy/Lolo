@@ -74,6 +74,32 @@ func NoZero[T comparable](a *T, b T) {
 	}
 }
 
+type orSlice interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64 | ~string | ~bool
+}
+
+func AddSlice[T orSlice](a *[]T, b T) {
+	if a == nil {
+		a = new([]T)
+	}
+	for _, v := range *a {
+		if v == b {
+			return
+		}
+	}
+	*a = append(*a, b)
+}
+
+func DelSlice[T orSlice](a *[]T, b T) {
+	for index, v := range *a {
+		if v == b {
+			slice := *a
+			*a = append(slice[:index], slice[index+1:]...)
+			return
+		}
+	}
+}
+
 func Uint32UniqueUint64(a, b uint32) uint64 {
 	if a > b {
 		return uint64(a)<<32 | uint64(b)

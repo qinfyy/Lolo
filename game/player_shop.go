@@ -83,8 +83,11 @@ func (g *Game) ShopBuy(s *model.Player, msg *alg.GameMsg) {
 			return
 		}
 		characterInfo.IsUnlockPayment = true
+		g.send(s, 0, &proto.CharacterBpBuyNotice{
+			Status:      proto.StatusCode_StatusCode_Ok,
+			CharacterId: characterInfo.CharacterId,
+		})
 
-		alg.AddList(&rsp.Items, characterInfo.ItemDetail())
 	default:
 		bagItem := s.AddAllTypeItem(uint32(conf.ItemID), int64(conf.ItemNum*int32(req.BuyTimes)))
 		alg.AddList(&rsp.Items, bagItem.AddItemDetail())
