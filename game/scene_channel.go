@@ -289,7 +289,7 @@ func (c *ChannelInfo) serverSceneSync(ctx *ServerSceneSyncCtx) {
 	case proto.SceneActionType_SceneActionType_Leave: // 退出场景
 	case proto.SceneActionType_SceneActionType_UpdateEquip: /*更新装备*/
 		sceneCharacter := ctx.NewTeamSceneCharacter(serverData)
-		ctx.ScenePlayer.UpdateEquip(sceneCharacter)
+		ctx.ScenePlayer.UpdateCharacterEquip(sceneCharacter)
 	case proto.SceneActionType_SceneActionType_UpdateFashion, /*更新服装*/
 		proto.SceneActionType_SceneActionType_UpdateTeam,       /*更新队伍*/
 		proto.SceneActionType_SceneActionType_UpdateAppearance: /*更新外观*/
@@ -310,6 +310,11 @@ func (c *ChannelInfo) serverSceneSync(ctx *ServerSceneSyncCtx) {
 		serverData.TodTime = c.getTodTime()
 	case proto.SceneActionType_SceneActionType_UpdateMusicalItem: // 乐器更新
 		ctx.ScenePlayer.UpdateMusicalItem(serverData.Player)
+	case proto.SceneActionType_SceneActionType_UpdateCharacterLv, // 角色升级
+		proto.SceneActionType_SceneActionType_UpdateCharacterBreakLv, // 角色突破升阶
+		proto.SceneActionType_SceneActionType_UpdateCharacterStar:    // 角色升星
+		sceneCharacter := ctx.NewTeamSceneCharacter(serverData)
+		ctx.ScenePlayer.UpdateCharacterBasic(sceneCharacter)
 	}
 }
 
@@ -574,9 +579,9 @@ func (s *ScenePlayer) GetPbSceneCharacter(characterId uint32) (info *proto.Scene
 		Pos:                 s.Pos,
 		Rot:                 s.Rot,
 		CharId:              characterInfo.CharacterId,
-		CharLv:              characterInfo.Level,
-		CharBreakLv:         characterInfo.BreakLevel,
-		CharStar:            characterInfo.Star,
+		CharLv:              0, // ok
+		CharBreakLv:         0, // ok
+		CharStar:            0, // ok
 		CharacterAppearance: characterInfo.GetPbCharacterAppearance(),
 		OutfitPreset:        s.GetPbSceneCharacterOutfitPreset(characterInfo),
 		WeaponId:            0, // ok
@@ -589,8 +594,10 @@ func (s *ScenePlayer) GetPbSceneCharacter(characterId uint32) (info *proto.Scene
 		InscriptionLv:       0,
 		MpGameWeapon:        0,
 	}
+	// 基础
+	s.UpdateCharacterBasic(info)
 	// 装备
-	s.UpdateEquip(info)
+	s.UpdateCharacterEquip(info)
 	// 装备
 	{
 		equipmentPreset := characterInfo.GetEquipmentPreset(characterInfo.InUseEquipmentPresetIndex)
@@ -615,7 +622,18 @@ func (s *ScenePlayer) GetPbSceneCharacter(characterId uint32) (info *proto.Scene
 	return
 }
 
-func (s *ScenePlayer) UpdateEquip(info *proto.SceneCharacter) {
+func (s *ScenePlayer) UpdateCharacterBasic(info *proto.SceneCharacter) {
+	characterInfo := s.GetCharacterModel().GetCharacterInfo(info.GetCharId())
+	if characterInfo == nil || info == nil {
+		return
+	}
+	info.CharLv = characterInfo.Level
+	info.CharBreakLv = characterInfo.BreakLevel
+	info.CharStar = characterInfo.Star
+	info.CharLv = characterInfo.Level
+}
+
+func (s *ScenePlayer) UpdateCharacterEquip(info *proto.SceneCharacter) {
 	characterInfo := s.GetCharacterModel().GetCharacterInfo(info.GetCharId())
 	if characterInfo == nil || info == nil {
 		return
