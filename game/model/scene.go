@@ -50,6 +50,7 @@ type SceneInfo struct {
 	Collections  map[proto.ECollectionType]*CollectionInfo `json:"collections,omitempty"`  // 收集
 	AreaDatas    map[uint32]*AreaData                      `json:"areaDatas,omitempty"`    // 锚点
 	GatherLimits map[uint32]*GatherLimit                   `json:"gatherLimits,omitempty"` // 资源点
+	TreasureBoxs map[uint32]*TreasureBox                   `json:"treasureBoxs,omitempty"` // 宝箱
 }
 
 func (si *SceneInfo) GetCollections() map[proto.ECollectionType]*CollectionInfo {
@@ -71,6 +72,13 @@ func (si *SceneInfo) GetGatherLimits() map[uint32]*GatherLimit {
 		si.GatherLimits = make(map[uint32]*GatherLimit)
 	}
 	return si.GatherLimits
+}
+
+func (si *SceneInfo) GetTreasurBoxs() map[uint32]*TreasureBox {
+	if si.TreasureBoxs == nil {
+		si.TreasureBoxs = make(map[uint32]*TreasureBox)
+	}
+	return si.TreasureBoxs
 }
 
 type CollectionInfo struct {
@@ -188,5 +196,26 @@ func (si *SceneInfo) GetGatherLimit(t uint32) *GatherLimit {
 		}
 		list[t] = info
 	}
+	return info
+}
+
+type TreasureBox struct {
+	Index           uint32                 `json:"index,omitempty"`
+	BoxId           uint32                 `json:"boxId,omitempty"`
+	Type            proto.ETreasureBoxType `json:"type,omitempty"`
+	State           proto.TreasureBoxState `json:"state,omitempty"`
+	NextRefreshTime int64                  `json:"nextRefreshTime,omitempty"`
+}
+
+func (t *TreasureBox) TreasureBoxData() *proto.TreasureBoxData {
+	info := &proto.TreasureBoxData{
+		Index:           t.Index,
+		BoxId:           t.BoxId,
+		Type:            t.Type,
+		State:           t.State,
+		NextRefreshTime: t.NextRefreshTime,
+		Rewards:         make([]*proto.ItemDetail, 0),
+	}
+
 	return info
 }

@@ -485,7 +485,7 @@ func (c *ChannelInfo) GetPbSceneData(scenePlayer *ScenePlayer) (info *proto.Scen
 		Areas:                make([]*proto.AreaData, 0),       // ok
 		Collections:          make([]*proto.CollectionData, 0), // ok
 		Challenges:           make([]*proto.ChallengeData, 0),
-		TreasureBoxes:        make([]*proto.TreasureBoxData, 0),
+		TreasureBoxes:        make([]*proto.TreasureBoxData, 0), // ok
 		Riddles:              make([]*proto.RiddleData, 0),
 		Monsters:             make([]*proto.MonsterData, 0),
 		EncounterData:        make([]*proto.BattleEncounterData, 0),
@@ -529,6 +529,10 @@ func (c *ChannelInfo) GetPbSceneData(scenePlayer *ScenePlayer) (info *proto.Scen
 			continue
 		}
 		alg.AddList(&info.Collections, collectInfo.CollectionData())
+	}
+	// 添加宝箱
+	for _, treasur := range scenePlayer.GetSceneModel().GetSceneInfo(c.SceneInfo.SceneId).GetTreasurBoxs() {
+		alg.AddList(&info.TreasureBoxes, treasur.TreasureBoxData())
 	}
 	// 添加场景中的玩家
 	for _, player := range c.getAllPlayer() {

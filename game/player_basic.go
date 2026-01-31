@@ -190,6 +190,8 @@ func (g *Game) loginGame(s *model.Player) {
 	g.GatherSceneLimitRecoveryNotice(s)
 	// 物品
 	g.AllPackNotice(s)
+	// 祝福树
+	g.BlessTreeNotice(s)
 	// 进入房间
 	g.getWordInfo().joinSceneChannel(s)
 	// 初始化聊天
