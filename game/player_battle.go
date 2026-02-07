@@ -17,7 +17,7 @@ func (g *Game) BattleEncounterInfo(s *model.Player, msg *alg.GameMsg) {
 		alg.AddList(&rsp.Encounters, &proto.BattleEncounterData{
 			BattleId: encounterId,
 			State:    proto.BattleState_BattleState_Start,
-			// BoxId:    encounterId,
+			BoxId:    300000,
 		})
 	}
 }
@@ -33,6 +33,20 @@ func (g *Game) BattleEncounterStateUpdate(s *model.Player, msg *alg.GameMsg) {
 	rsp.Encounter = &proto.BattleEncounterData{
 		BattleId: req.EncounterId,
 		State:    req.BattleState,
-		BoxId:    0,
+		BoxId:    300000,
+	}
+}
+
+func (g *Game) MonsterDead(s *model.Player, msg *alg.GameMsg) {
+	req := msg.Body.(*proto.MonsterDeadReq)
+	rsp := &proto.MonsterDeadRsp{
+		Status:       proto.StatusCode_StatusCode_Ok,
+		MonsterIndex: req.MonsterIndex,
+		DropItem:     nil,
+	}
+	defer g.send(s, msg.PacketId, rsp)
+	rsp.DropItem = &proto.DropItem{
+		Index: req.MonsterIndex,
+		Items: make([]*proto.ItemDetail, 0),
 	}
 }

@@ -12,7 +12,6 @@ require (
 	github.com/golang/snappy v1.0.0
 	github.com/google/gopacket v1.1.19
 	github.com/gookit/slog v0.6.0
-	github.com/jhump/protoreflect v1.17.0
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/protobuf v1.36.11
 	gorm.io/driver/mysql v1.6.0

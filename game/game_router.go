@@ -102,8 +102,9 @@ func (g *Game) newRouter() {
 		cmd.ShopBuyReq:        g.ShopBuy,        // 商店购买请求
 		cmd.CreatePayOrderReq: g.CreatePayOrder, // 创建支付订单请求
 		// 战斗
-		cmd.BattleEncounterInfoReq:        g.BattleEncounterInfo,        // 获取战斗遭遇信息
-		cmd.BattleEncounterStateUpdateReq: g.BattleEncounterStateUpdate, // 战斗遭遇开始更新请求
+		cmd.BattleEncounterInfoReq:        g.BattleEncounterInfo,        // 获取遭遇战斗信息
+		cmd.BattleEncounterStateUpdateReq: g.BattleEncounterStateUpdate, // 遭遇战斗更新请求
+		cmd.MonsterDeadReq:                g.MonsterDead,                // 怪物死亡
 		// 深渊
 		cmd.AbyssInfoReq: g.AbyssInfo, // 深渊信息请求
 		// 邮箱
