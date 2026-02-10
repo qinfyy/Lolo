@@ -112,3 +112,56 @@ type AsyUonlineRequest struct {
 	IsEmt       string `json:"isEmt"`
 	ChannelCode string `json:"channelCode"`
 }
+
+type CheckLoginRequest struct {
+	ChannelCode  int    `json:"channel_code"`
+	Platform     int    `json:"platform"`
+	DeviceId     int    `json:"device_id"`
+	DeviceOs     int    `json:"device_os"`
+	DeviceOsV    int    `json:"device_os_v"`
+	DeviceName   int    `json:"device_name"`
+	Imei         int    `json:"imei"`
+	Mid          int    `json:"mid"`
+	GameName     string `json:"gameName"`
+	SdkV         string `json:"sdk_v"`
+	SdkSubV      string `json:"sdk_sub_v"`
+	ChannelSdkV  string `json:"channel_sdk_v"`
+	ProductV     int    `json:"product_v"`
+	SessionId    string `json:"session_id"`
+	Debug        int    `json:"debug"`
+	ScreenHeight int    `json:"screen_height"`
+	ScreenWidth  int    `json:"screen_width"`
+	Dpi          int    `json:"dpi"`
+	NetType      int    `json:"net_type"`
+	Time         int64  `json:"time"`
+	PackageName  string `json:"package_name"`
+	SignMd5      string `json:"sign_md5"`
+	Oaid         string `json:"oaid"`
+	Uid          string `json:"uid"`
+	Certificates string `json:"certificates"`
+	SignIssuer   string `json:"signIssuer"`
+	UserName     string `json:"user_name"`
+	SignSubject  string `json:"signSubject"`
+	SignSha1     string `json:"sign_sha1"`
+	SignMd51     string `json:"signMd5"`
+	Androidid    string `json:"androidid"`
+	Token        string `json:"token"`
+	CheckTime    string `json:"check_time"`
+}
+
+type CheckLoginResponse struct {
+	Uid       string `json:"uid"`
+	UserName  string `json:"user_name"`
+	Token     string `json:"token"`
+	UserToken string `json:"user_token"`
+}
+
+type CheckSdkTokenRequest struct {
+	Token string `json:"token"`
+	UID   string `json:"uid"`
+}
+
+type CheckSdkTokenResponse struct {
+	Code int    `json:"code"`
+	Uid  string `json:"uid"`
+}

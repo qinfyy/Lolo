@@ -51,6 +51,10 @@ func (g *Gateway) VerifyLoginToken(req *LoginInfo) {
 	}()
 	sdkUid := alg.S2U32(req.SdkUid)
 	// token验证
+	if !g.GetToken(req.SdkUid, req.LoginToken) {
+		log.Gate.Debugf("SdkUid:%s,token验证失败", req.SdkUid)
+		return
+	}
 	ofUser, err := db.GetOFUserBySdkUid(sdkUid)
 	if err != nil {
 		rsp.Status = proto.StatusCode_StatusCode_AccountUnauth
@@ -58,7 +62,6 @@ func (g *Gateway) VerifyLoginToken(req *LoginInfo) {
 		return
 	}
 
-	// TODO 代办工作
 	// 验证是否被ban
 
 	// 检查在线满了?

@@ -2,11 +2,14 @@ package gateway
 
 import (
 	"errors"
+	"github.com/bytedance/sonic"
+	"gucooing/lolo/protocol/quick"
 	"io"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	pb "google.golang.org/protobuf/proto"
+	"resty.dev/v3"
 
 	"gucooing/lolo/config"
 	"gucooing/lolo/game"
@@ -23,6 +26,7 @@ type Gateway struct {
 	loginChan    chan *LoginInfo // 登录通道
 	delLoginChan chan string     // 撤销登录通道 sdk uid ->
 	doneChan     chan struct{}   // 停止
+	client       *resty.Client
 	game         *game.Game
 }
 
@@ -36,6 +40,7 @@ func NewGateway(router *gin.Engine) *Gateway {
 		loginChan:    make(chan *LoginInfo, 1000),
 		delLoginChan: make(chan string, 1000),
 		doneChan:     make(chan struct{}),
+		client:       DefaultClient(),
 		game:         game.NewGame(router),
 	}
 	g.net, err = ofnet.NewNet("tcp", g.cfg.GetOuterAddr(), log.Gate)
@@ -148,4 +153,35 @@ func (g *Gateway) Close() {
 	close(g.doneChan)
 	g.game.Close()
 	log.Gate.Infof("gate退出完成")
+}
+
+func DefaultClient() *resty.Client {
+	return resty.New().
+		// 重试配置
+		SetRetryCount(10).
+		SetRetryWaitTime(50 * time.Millisecond).
+		SetRetryMaxWaitTime(2 * time.Second)
+}
+
+func (g *Gateway) GetToken(uid, token string) bool {
+	if !g.cfg.GetCheckToken() {
+		return true
+	}
+	resp, err := g.client.R().
+		SetBody(&quick.CheckSdkTokenRequest{
+			Token: token,
+			UID:   uid,
+		}).
+		Post(g.cfg.GetCheckUrl())
+	if err != nil {
+		return false
+	}
+	rsp := new(quick.CheckSdkTokenResponse)
+	if err = sonic.Unmarshal(resp.Bytes(), rsp); err != nil {
+		return false
+	}
+	if rsp.Uid != uid || rsp.Code != 0 {
+		return false
+	}
+	return true
 }

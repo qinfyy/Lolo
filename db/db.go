@@ -75,6 +75,7 @@ func NewDB(option *Option) error {
 	err = d.db.AutoMigrate(
 		&OFQuick{},
 		&OFUser{},
+		&OFQuickCheck{},
 		&OFGame{},
 		&OFGameBasic{},
 		&BlackDevice{},

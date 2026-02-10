@@ -64,9 +64,7 @@ func (s *Server) loginByNameV1(c *gin.Context) {
 	}
 
 	// 更新token
-	if user.AuthToken == "" {
-		user.AuthToken = s.GenToken(user.ID ^ authXor)
-	}
+	user.AuthToken = s.GenToken(user.ID ^ authXor)
 	user.UserToken = s.GenToken(user.ID)
 	if err := db.UpOFQuick(user); err != nil {
 		rsp.SetError("更新失败")

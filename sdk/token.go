@@ -2,6 +2,10 @@ package sdk
 
 import (
 	"errors"
+	"github.com/gin-gonic/gin"
+	"gucooing/lolo/db"
+	"gucooing/lolo/protocol/quick"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -20,22 +24,20 @@ type Token struct {
 func (s *Server) GenToken(id uint32) string {
 	t := &Token{
 		ID:   id,
-		Time: time.Now().Unix(),
+		Time: time.Now().Add(10 * time.Minute).Unix(),
 		Key:  config.GetGucooingApiKey(),
 	}
-	bin, err := sonic.Marshal(t)
+	tokenBin, err := sonic.Marshal(t)
 	if err != nil {
 		return ""
 	}
 	if s.rsa != nil {
-		tokenBin, err := s.rsa.Encode(bin)
+		tokenBin, err = s.rsa.Encode(tokenBin)
 		if err != nil {
 			return ""
 		}
-		return 逆天转换(tokenBin)
-	} else {
-		return 逆天转换(bin)
 	}
+	return 逆天转换(tokenBin)
 }
 
 func (s *Server) ToToken(token string) (*Token, error) {
@@ -80,4 +82,29 @@ func 逆天转回(str string) []byte {
 		bin = append(bin, byte(i-100))
 	}
 	return bin
+}
+
+func (s *Server) checkSdkToken(c *gin.Context) {
+	var req quick.CheckSdkTokenRequest
+	rsp := &quick.CheckSdkTokenResponse{}
+	defer c.JSON(http.StatusOK, rsp)
+	if err := c.ShouldBind(&req); err != nil {
+		rsp.Code = -1
+		return
+	}
+	_, err := s.ToToken(req.Token)
+	if err != nil {
+		rsp.Code = 1
+		return
+	}
+	userCheck, err := db.OrCreateOFQuickCheck(req.UID)
+	if err != nil {
+		rsp.Code = 1
+		return
+	}
+	if req.Token != userCheck.GateToken {
+		rsp.Code = 2
+		return
+	}
+	rsp.Uid = req.UID
 }

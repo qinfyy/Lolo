@@ -16,6 +16,7 @@ func (s *Server) Router() {
 	s.router.GET("/resolve", resolve)
 	s.router.GET("/config", teConfig)
 	s.router.POST("/sync", teConfig)
+	s.router.POST("/gucooing/lolo/checkSdkToken", s.checkSdkToken)
 
 	dispatch := s.router.Group("/dispatch")
 	{

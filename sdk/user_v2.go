@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"gucooing/lolo/db"
 	"gucooing/lolo/pkg/alg"
@@ -61,9 +60,7 @@ func (s *Server) loginByNameV2(c *gin.Context) {
 	}
 
 	// 更新token
-	if user.AuthToken == "" {
-		user.AuthToken = s.GenToken(user.ID ^ authXor)
-	}
+	user.AuthToken = s.GenToken(user.ID ^ authXor)
 	user.UserToken = s.GenToken(user.ID)
 	if err := db.UpOFQuick(user); err != nil {
 		rsp.SetError("更新失败")
@@ -104,5 +101,41 @@ func (s *Server) autoLoginV2(c *gin.Context) {
 }
 
 func (s *Server) checkLoginV2(c *gin.Context) {
-	fmt.Sprintf("")
+	req := new(quick.CheckLoginRequest)
+	rsp := quick.NewResponse()
+	defer c.JSON(200, rsp)
+	if err := alg.DecryptedData(c, &req); err != nil {
+		rsp.SetError("解密失败")
+		log.App.Debugf("gin req autoLogin error: %v", err)
+		return
+	}
+	token, err := s.ToToken(req.Token)
+	if err != nil {
+		rsp.SetError("解密失败")
+		return
+	}
+	user, err := db.GetOFQuick(token.ID)
+	if err != nil {
+		rsp.SetError("没有该账号")
+		return
+	}
+	userCheck, err := db.OrCreateOFQuickCheck(strconv.Itoa(int(user.ID)))
+	if err != nil {
+		rsp.SetError("没有该账号")
+		return
+	}
+	userCheck.LastPackageName = req.PackageName
+	userCheck.GateToken = s.GenToken(user.ID)
+
+	if err := db.UpOFQuickCheck(userCheck); err != nil {
+		rsp.SetError("更新失败")
+		return
+	}
+	data := &quick.CheckLoginResponse{
+		Uid:       req.Uid,
+		UserName:  user.Username,
+		Token:     req.Token,
+		UserToken: userCheck.GateToken,
+	}
+	rsp.SetData(data)
 }

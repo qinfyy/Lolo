@@ -12,6 +12,8 @@ type GateWay struct {
 	MaxPlayerNum   int64    `json:"MaxPlayerNum"`
 	BlackCmd       []string `json:"BlackCmd"`
 	IsLogMsgPlayer bool     `json:"IsLogMsgPlayer"`
+	CheckToken     bool     `json:"CheckToken"`
+	CheckUrl       string   `json:"CheckUrl"`
 }
 
 var defaultGateWay = &GateWay{
@@ -32,6 +34,8 @@ var defaultGateWay = &GateWay{
 		"PlayerSceneSyncDataNotice",
 	},
 	IsLogMsgPlayer: false,
+	CheckToken:     true,
+	CheckUrl:       "http://127.0.0.1:8080/gucooing/lolo/checkSdkToken",
 }
 
 func GetGateWay() *GateWay {
@@ -64,4 +68,12 @@ func (x *GateWay) GetBlackCmd() []string {
 
 func (x *GateWay) GetIsLogMsgPlayer() bool {
 	return x.IsLogMsgPlayer
+}
+
+func (x *GateWay) GetCheckToken() bool {
+	return x.CheckToken
+}
+
+func (x *GateWay) GetCheckUrl() string {
+	return x.CheckUrl
 }
