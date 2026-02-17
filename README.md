@@ -4,7 +4,7 @@
 
 开放空间/OverField 服务端部分实现
 
-支持的客户端版本:cn-最新(ios/windows/android/是cn客户端都支持)
+支持的客户端版本:所有区服的最新版本(ios/windows/android/是客户端都支持)
 
 # 本项目仅供学习与交流,请在下载后的24H内删除,相关版权归 **[四川星期零信息科技有限公司 ©版权所有](https://www.nekotan7.com)**
 
@@ -24,6 +24,7 @@
 2. 虽然默认支持tls但是依然推荐使用http,并通过反向代理使用https
 3. 如果你的pc端无法登录,请关闭config.json中的ChecnToken
 4. 如果你想使用其他sdk,这里有一个接入示例:[Lolo-sdk](https://github.com/BanterSR/Lolo-sdk/blob/main/src/handlers/token.rs#L91)
+5. 当前sdk仅支持cn-安卓/ios 客户端,其他区服/平台客户端需要登录请参考注意事项3关闭ChecnToken
 
 ## 已实现功能
 
