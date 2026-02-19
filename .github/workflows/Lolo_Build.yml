@@ -15,6 +15,9 @@ on:
       - ready_for_review
     paths-ignore:
       - "**.md"
+  push:
+    branches: [ "main" ]
+
 jobs:
   push-data:
     name: push-data
@@ -76,6 +79,16 @@ jobs:
           lfs: true
           fetch-depth: 0
           token: ${{ secrets.TOKEN }}
+
+      - name: Get Commit Hash
+        id: commit
+        run: |
+          COMMIT_SHORT=$(git rev-parse --short HEAD)
+          COMMIT_FULL=$(git rev-parse HEAD)
+          echo "short=$COMMIT_SHORT" >> $GITHUB_OUTPUT
+          echo "full=$COMMIT_FULL" >> $GITHUB_OUTPUT
+          echo "Commit hash: $COMMIT_SHORT"
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -93,9 +106,21 @@ jobs:
             OUTPUT_NAME="$OUTPUT_NAME.exe"
           fi
           
-          echo "Building for $GOOS-$GOARCH..."
+          COMMIT="${{ steps.commit.outputs.short }}"
+          
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.tag }}" != "" ]]; then
+            SERVER_VERSION="${{ github.event.inputs.tag }}"
+            VERSION_FLAG="-X 'gucooing/lolo/pkg.ServerVersion=${SERVER_VERSION}'"
+          else
+            SERVER_VERSION=""
+            VERSION_FLAG=""
+          fi
+          
+          echo "Building for $GOOS-$GOARCH with version: ${SERVER_VERSION:-none}, commit: $COMMIT..."
+          
           GOOS=$GOOS GOARCH=$GOARCH \
-          go build -ldflags="-s -w" -o ./bin/$OUTPUT_NAME ./main.go
+          go build -ldflags="-s -w ${VERSION_FLAG} -X 'gucooing/lolo/pkg.Commit=${COMMIT}'" -o ./bin/$OUTPUT_NAME ./main.go
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
